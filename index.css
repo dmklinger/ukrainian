@@ -1,0 +1,20 @@
+table {
+	width: 80%;
+	padding: 80;
+	margin-left: auto;
+	margin-right: auto;
+	border-collapse: collapse;
+}
+
+table, tr, td {
+	border: 1px solid black;
+	padding: 1em
+}
+
+td {
+	text-align:center
+}
+
+html {
+	font-family: 'helvetica neue', helvetica, arial, sans-serif;
+}
