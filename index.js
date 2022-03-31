@@ -37,7 +37,7 @@ var main = (data) => {
 		});
 }
 
-fetch('/words.json')
+fetch('ukrainian/words.json')
 	.then(res => res.json())
 	.then(out => { console.log(out); main(out); })
 	.catch(err => {throw err});
