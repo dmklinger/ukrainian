@@ -1,3 +1,5 @@
+'use strict';
+
 var main = (data) => {
 	data.sort((a, b) => { 
 		a = a['freq'];
@@ -11,10 +13,28 @@ var main = (data) => {
 		.append('tbody').selectAll()
 		.data(data_sliced)
 		.join('tr')
-	tr.selectAll()
-		.data((d) => { return [d['pos'], d['word'], d['freq'], d['defs'], d['forms']]; })
-		.join('td')
-		.text((d) => { return JSON.stringify(d); });
+
+	tr.selectAll('td')
+		.data((d) => { return [d.pos, d.word, d.freq, d.defs, d.forms]; })
+		.enter()
+		.append('td')
+		.each(function(d, i) {
+			let this_obj = d3.select(this)
+			switch (i) {
+				case 3: {
+					this_obj.selectAll()
+						.data(d)
+						.join('ul')
+						.text((d) => {console.log(d); return d;});
+					break;
+				}
+				case 4: {
+					this_obj.text(JSON.stringify(d))
+					break;
+				}
+				default: this_obj.text(d);
+			}
+		});
 }
 
 fetch('/words.json')
