@@ -7,7 +7,7 @@ var main = (data) => {
 		return (a === null) - ( b===null ) || -(b > a) || +(b < a);
 	})
 	console.log(data)
-	let data_sliced = data.slice(0, 5000)
+	let data_sliced = data.slice(0, 300)
 	let tr = d3.select("body")
 		.append('table')
 		.append('tbody').selectAll()
