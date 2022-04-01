@@ -18,17 +18,6 @@ var main = (data) => {
 			[['nom.'], ['acc.'], ['gen.'], ['dat.'], ['ins.'], ['loc.'], ['voc.']],
 			[gf(d, 'nom n'), gf(d, 'acc n'), gf(d, 'gen n'), gf(d, 'dat n'), gf(d, 'ins n'), gf(d, 'loc n'), gf(d, 'voc n')]
 		]
-		/*
-		obj.selectAll()
-			.data(word_data)
-			.join('div')
-				.attr('class', 'row')
-				.selectAll()
-			.data((d) => { return d })
-			.join('div')
-				.attr('class', 'col')
-			.text((d) => { return d })
-		*/
 		obj.append('table').selectAll()
 			.data(word_data)
 			.join('tr').selectAll()
