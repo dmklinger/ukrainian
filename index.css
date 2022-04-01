@@ -1,20 +1,34 @@
 table {
-	width: 80%;
-	padding: 80;
+	width: min(1000px, 40%);
 	margin-left: auto;
 	margin-right: auto;
-	border-collapse: collapse;
+	/* border-collapse: collapse; */
 }
 
-table, tr, td {
+tr, td {
 	border: 1px solid black;
-	padding: 1em;
+	padding: 0.5em 1.5em 0.5em 1.5em;
 }
 
 td {
-	text-align:center
+	text-align: center;
 }
 
 html {
 	font-family: 'helvetica neue', helvetica, arial, sans-serif;
+}
+
+ul {
+	list-style: square;
+	margin: 0;
+	padding: 0;
+}
+
+li {
+	text-align: left;
+	margin: 1em;
+}
+
+#def {
+	width: 300px
 }
