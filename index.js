@@ -8,7 +8,7 @@ var main = (data) => {
 		.data(data_sliced)
 		.join('tr')
 
-	tr.selectAll('td')
+	tr.selectAll()
 		.data((d) => { return [d.info ? [d.pos, `(${d.info})`] : [d.pos], d.word, d.freq, d.defs, d.forms]; })
 		.enter()
 		.append('td')
@@ -33,7 +33,9 @@ var main = (data) => {
 					break;
 				}
 				case 4: {
-					this_obj.text(JSON.stringify(d))
+					if (Object.keys(d).length > 0) { 
+						this_obj.text(JSON.stringify(d)) 
+					};
 					break;
 				}
 				default: this_obj.text(d);
