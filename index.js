@@ -1,12 +1,6 @@
 'use strict';
 
 var main = (data) => {
-	data.sort((a, b) => { 
-		a = a['freq'];
-		b = b['freq'];
-		return (a === null) - ( b===null ) || -(b > a) || +(b < a);
-	})
-	console.log(data)
 	let data_sliced = data.slice(0, 300)
 	let tr = d3.select("body")
 		.append('table')
@@ -15,17 +9,27 @@ var main = (data) => {
 		.join('tr')
 
 	tr.selectAll('td')
-		.data((d) => { return [d.pos, d.word, d.freq, d.defs, d.forms]; })
+		.data((d) => { return [d.info ? [d.pos, `(${d.info})`] : [d.pos], d.word, d.freq, d.defs, d.forms]; })
 		.enter()
 		.append('td')
 		.each(function(d, i) {
 			let this_obj = d3.select(this)
 			switch (i) {
-				case 3: {
+				case 0: {
 					this_obj.selectAll()
 						.data(d)
-						.join('ul')
-						.text((d) => {console.log(d); return d;});
+						.join('p')
+						.text((d) => { return d; });
+					break;
+				}
+				case 3: {
+					this_obj
+						.append('ul')
+						.attr('id', 'def')
+						.selectAll()
+						.data(d)
+						.join('li')
+						.text((d) => { return d;});
 					break;
 				}
 				case 4: {
@@ -39,5 +43,5 @@ var main = (data) => {
 
 fetch('words.json')
 	.then(res => res.json())
-	.then(out => { console.log(out); main(out); })
+	.then(out => { main(out); })
 	.catch(err => {throw err});
