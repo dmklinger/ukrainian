@@ -1,12 +1,12 @@
 .main {
-	width: max(1400px, 50%);
+	width: max(800px, 50%);
 	display: grid;
-	grid-template-columns: 6fr 6fr 1fr 6fr 6fr;
+	grid-template-columns: 2fr 1fr 1fr 5fr 8fr;
 	margin-left: auto;
 	margin-right: auto;
 	background-color: lightgrey;
 	grid-gap: 1px;
-	font-size: 16px;
+	font-size: 14px;
 }
 
 .row {
@@ -48,10 +48,10 @@ table {
 	border-collapse: collapse;
 }
 
-tr, td {
+tr, td, th {
 	border-left: 2px solid black;
 	border-right: 2px solid black;
-	padding: 5px 15px;
+	padding: 5px 10px;
 }
 
 td {
@@ -60,10 +60,10 @@ td {
 }
 
 #def {
-	width: 300px
+	align-items: baseline;
 }
 
-#forms>* {
+#forms > * {
 	margin: auto;
 }
 

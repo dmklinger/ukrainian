@@ -1,7 +1,7 @@
 'use strict';
 
 var main = (data) => {
-	let data_sliced = data.slice(0, 1000)
+	let data_sliced = data.slice(0, 300)
 	let tr = d3.select("body")
 		.append('div')
 			.attr('class', 'main')
@@ -14,11 +14,22 @@ var main = (data) => {
 
 	let single_noun_table = (obj, d) => {
 		// obj.text(JSON.stringify(d))
+		let headers = [
+			[['nom.'], ['acc.'], ['gen.'], ['dat.'], ['ins.'], ['loc.'], ['voc.']]
+		]
 		let word_data = [
-			[['nom.'], ['acc.'], ['gen.'], ['dat.'], ['ins.'], ['loc.'], ['voc.']],
 			[gf(d, 'nom n'), gf(d, 'acc n'), gf(d, 'gen n'), gf(d, 'dat n'), gf(d, 'ins n'), gf(d, 'loc n'), gf(d, 'voc n')]
 		]
-		obj.append('table').selectAll()
+		let table = obj.append('table')
+		table.selectAll()
+			.data(headers)
+			.join('tr').selectAll()
+			.data((d) => { return d })
+			.join('th').selectAll()
+			.data((d) => { return d })
+			.join('p')
+			.text((d) => { return d })		
+		table.selectAll()
 			.data(word_data)
 			.join('tr').selectAll()
 			.data((d) => { return d })
@@ -44,9 +55,8 @@ var main = (data) => {
 					break;
 				}
 				case 3: {
-					this_obj
+					this_obj.attr('id', 'def')
 						.append('ul')
-						.attr('id', 'def')
 						.selectAll()
 						.data(d)
 						.join('li')
