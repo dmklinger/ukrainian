@@ -1,17 +1,26 @@
-table {
-	width: min(1000px, 40%);
+.main {
+	width: max(1000px, 50%);
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr 3fr 4fr;
 	margin-left: auto;
 	margin-right: auto;
-	/* border-collapse: collapse; */
 }
 
-tr, td {
-	border: 1px solid black;
-	padding: 0.5em 1.5em 0.5em 1.5em;
+.row {
+	border: 1px dashed red;
+	display: contents;
 }
 
-td {
-	text-align: center;
+.col {
+	border: 1px dotted blue;
+	display: flex;
+	align-items: center;
+	flex-direction: column;
+	padding: 1em
+}
+
+p {
+	margin: 0em;
 }
 
 html {
@@ -21,14 +30,23 @@ html {
 ul {
 	list-style: square;
 	margin: 0;
+	margin-left: 1em;
 	padding: 0;
 }
 
 li {
 	text-align: left;
-	margin: 1em;
+	margin: 0;
 }
 
 #def {
 	width: 300px
+}
+
+#forms>* {
+	margin: auto;
+}
+
+#indcl {
+	color: darkgrey;
 }
