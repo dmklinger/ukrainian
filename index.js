@@ -62,6 +62,37 @@ var main = (data) => {
 			
 	}
 
+	let adjective_table = (obj, d) => {
+		let word_data = [
+			[['nom.'], ['acc. (anim.)'], ['acc. (inan.)'], ['gen.'], ['dat.'], ['ins.'], ['loc.']],
+			[gf(d, 'nom am'), gf(d, 'gen am'), gf(d, 'nom am'), gf(d, 'gen am'), gf(d, 'dat am'), gf(d, 'ins am'), gf(d, 'loc am')],
+			[gf(d, 'nom an'), gf(d, 'gen an'), gf(d, 'nom an'), gf(d, 'gen an'), gf(d, 'dat an'), gf(d, 'ins an'), gf(d, 'loc an')],
+			[gf(d, 'nom af'), gf(d, 'gen af'), gf(d, 'nom af'), gf(d, 'gen af'), gf(d, 'dat af'), gf(d, 'ins af'), gf(d, 'loc af')],
+			[gf(d, 'nom ap'), gf(d, 'gen ap'), gf(d, 'nom ap'), gf(d, 'gen ap'), gf(d, 'dat ap'), gf(d, 'ins ap'), gf(d, 'loc ap')]
+		]
+		let table = obj.append('table')
+		table.selectAll()
+			.data(word_data)
+			.join('tr')
+			.each(function(d, i) {
+				let itemTag = i === 0 ? 'th' : 'td';
+				let numberLabel = '';
+				if (i === 1) { numberLabel = 'Male'}
+				if (i === 2) { numberLabel = 'Neut.'}
+				if (i === 3) { numberLabel = 'Fem.'}
+				let t = d3.select(this)
+				t.append('th')
+						.attr('id', 'leftLabel')
+						.text(numberLabel)
+				t.selectAll()
+					.data((d) => { return d })
+					.join(itemTag).selectAll()
+					.data((d) => { return d })
+					.join('p')
+					.text((d) => { return d });
+			})
+	}
+
 	tr.selectAll()
 		.data((d) => { return [d.info ? [d.pos, `(${d.info})`] : [d.pos], d.word, d.freq, d.defs, d.forms]; })
 			.enter()
@@ -95,8 +126,7 @@ var main = (data) => {
 						noun_table(this_obj, d)
 					}
 					else if ('nom am' in d) {
-						this_obj.append('p')
-							.text('adj form')
+						adjective_table(this_obj, d)
 					}
 					else if ('inf' in d) {
 						this_obj.append('p')
