@@ -10,7 +10,7 @@ var main = (data) => {
 		.join('div')
 			.attr('class', 'row')
 
-	let gf = (o, form) => { if (form in o) { return o[form] }; return ['[no form]']; }  // get form
+	let gf = (o, form) => { if (form in o) { return o[form] }; return ['—']; }  // get form
 
 	let single_noun_table = (obj, d) => {
 		let word_data = [
@@ -64,7 +64,7 @@ var main = (data) => {
 
 	let adjective_table = (obj, d) => {
 		let word_data = [
-			[['nom.'], ['acc. (anim.)'], ['acc. (inan.)'], ['gen.'], ['dat.'], ['ins.'], ['loc.']],
+			[['nom.'], ['acc.', '(anim.)'], ['acc.', '(inan.)'], ['gen.'], ['dat.'], ['ins.'], ['loc.']],
 			[gf(d, 'nom am'), gf(d, 'gen am'), gf(d, 'nom am'), gf(d, 'gen am'), gf(d, 'dat am'), gf(d, 'ins am'), gf(d, 'loc am')],
 			[gf(d, 'nom an'), gf(d, 'gen an'), gf(d, 'nom an'), gf(d, 'gen an'), gf(d, 'dat an'), gf(d, 'ins an'), gf(d, 'loc an')],
 			[gf(d, 'nom af'), gf(d, 'gen af'), gf(d, 'nom af'), gf(d, 'gen af'), gf(d, 'dat af'), gf(d, 'ins af'), gf(d, 'loc af')],
