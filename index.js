@@ -80,6 +80,7 @@ var main = (data) => {
 				if (i === 1) { numberLabel = 'Male'}
 				if (i === 2) { numberLabel = 'Neut.'}
 				if (i === 3) { numberLabel = 'Fem.'}
+				if (i === 4) { numberLabel = 'Plur.'}
 				let t = d3.select(this)
 				t.append('th')
 						.attr('id', 'leftLabel')
