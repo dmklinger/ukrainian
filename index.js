@@ -13,30 +13,53 @@ var main = (data) => {
 	let gf = (o, form) => { if (form in o) { return o[form] }; return ['[no form]']; }  // get form
 
 	let single_noun_table = (obj, d) => {
-		// obj.text(JSON.stringify(d))
-		let headers = [
-			[['nom.'], ['acc.'], ['gen.'], ['dat.'], ['ins.'], ['loc.'], ['voc.']]
-		]
 		let word_data = [
+			[['nom.'], ['acc.'], ['gen.'], ['dat.'], ['ins.'], ['loc.'], ['voc.']],
 			[gf(d, 'nom n'), gf(d, 'acc n'), gf(d, 'gen n'), gf(d, 'dat n'), gf(d, 'ins n'), gf(d, 'loc n'), gf(d, 'voc n')]
+		]
+		obj.append('table')
+			.selectAll()
+			.data(word_data)
+			.join('tr')
+			.each(function(d, i) {
+				let itemTag = i === 0 ? 'th' : 'td';
+				d3.select(this)
+					.selectAll()
+					.data((d) => { return d })
+					.join(itemTag).selectAll()
+					.data((d) => { return d })
+					.join('p')
+					.text((d) => { return d })	
+			})	
+	}
+
+	let noun_table = (obj, d) => {
+		let word_data = [
+			[['nom.'], ['acc.'], ['gen.'], ['dat.'], ['ins.'], ['loc.'], ['voc.']],
+			[gf(d, 'nom ns'), gf(d, 'acc ns'), gf(d, 'gen ns'), gf(d, 'dat ns'), gf(d, 'ins ns'), gf(d, 'loc ns'), gf(d, 'voc ns')],
+			[gf(d, 'nom np'), gf(d, 'acc np'), gf(d, 'gen np'), gf(d, 'dat np'), gf(d, 'ins np'), gf(d, 'loc np'), gf(d, 'voc np')]
 		]
 		let table = obj.append('table')
 		table.selectAll()
-			.data(headers)
-			.join('tr').selectAll()
-			.data((d) => { return d })
-			.join('th').selectAll()
-			.data((d) => { return d })
-			.join('p')
-			.text((d) => { return d })		
-		table.selectAll()
 			.data(word_data)
-			.join('tr').selectAll()
-			.data((d) => { return d })
-			.join('td').selectAll()
-			.data((d) => { return d })
-			.join('p')
-			.text((d) => { return d })
+			.join('tr')
+			.each(function(d, i) {
+				let itemTag = i === 0 ? 'th' : 'td';
+				let numberLabel = '';
+				if (i === 1) { numberLabel = 'Sing.'}
+				if (i === 2) { numberLabel = 'Plur.'}
+				let t = d3.select(this)
+				t.append('th')
+						.attr('id', 'leftLabel')
+						.text(numberLabel)
+				t.selectAll()
+					.data((d) => { return d })
+					.join(itemTag).selectAll()
+					.data((d) => { return d })
+					.join('p')
+					.text((d) => { return d });
+			})
+			
 	}
 
 	tr.selectAll()
@@ -69,8 +92,7 @@ var main = (data) => {
 						single_noun_table(this_obj, d)
 					}
 					else if ('nom ns' in d || 'nom np' in d) {
-						this_obj.append('p')
-							.text('noun s/p form')
+						noun_table(this_obj, d)
 					}
 					else if ('nom am' in d) {
 						this_obj.append('p')

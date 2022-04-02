@@ -1,5 +1,5 @@
 .main {
-	width: max(800px, 50%);
+	width: max(1500px, 50%);
 	display: grid;
 	grid-template-columns: 2fr 1fr 1fr 5fr 8fr;
 	margin-left: auto;
@@ -49,9 +49,20 @@ table {
 }
 
 tr, td, th {
+	padding: 5px 10px;
+}
+
+td {
 	border-left: 2px solid black;
 	border-right: 2px solid black;
-	padding: 5px 10px;
+}
+
+th {
+	border-right: 2px solid black;
+}
+
+th:not(#leftLabel) {
+	border-left: 2px solid black;
 }
 
 td {
