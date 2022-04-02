@@ -66,8 +66,8 @@ var main = (data) => {
 		let word_data = [
 			[['nom.'], ['acc.', '(anim.)'], ['acc.', '(inan.)'], ['gen.'], ['dat.'], ['ins.'], ['loc.']],
 			[gf(d, 'nom am'), gf(d, 'gen am'), gf(d, 'nom am'), gf(d, 'gen am'), gf(d, 'dat am'), gf(d, 'ins am'), gf(d, 'loc am')],
-			[gf(d, 'nom an'), gf(d, 'gen an'), gf(d, 'nom an'), gf(d, 'gen an'), gf(d, 'dat an'), gf(d, 'ins an'), gf(d, 'loc an')],
-			[gf(d, 'nom af'), gf(d, 'gen af'), gf(d, 'nom af'), gf(d, 'gen af'), gf(d, 'dat af'), gf(d, 'ins af'), gf(d, 'loc af')],
+			[gf(d, 'nom an'), gf(d, 'nom an'), gf(d, 'nom an'), gf(d, 'gen an'), gf(d, 'dat an'), gf(d, 'ins an'), gf(d, 'loc an')],
+			[gf(d, 'nom af'), gf(d, 'acc af'), gf(d, 'acc af'), gf(d, 'gen af'), gf(d, 'dat af'), gf(d, 'ins af'), gf(d, 'loc af')],
 			[gf(d, 'nom ap'), gf(d, 'gen ap'), gf(d, 'nom ap'), gf(d, 'gen ap'), gf(d, 'dat ap'), gf(d, 'ins ap'), gf(d, 'loc ap')]
 		]
 		let table = obj.append('table')
