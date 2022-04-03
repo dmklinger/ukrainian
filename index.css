@@ -62,7 +62,7 @@ th {
 	border-right: 2px solid black;
 }
 
-th:not(#leftLabel) {
+th:not(#leftLabel, #tenseMarker) {
 	border-left: 2px solid black;
 }
 
@@ -70,7 +70,7 @@ th:not(#leftLabel) {
 	text-align: right;
 }
 
-.tenseMarker {
+#tenseMarker {
 	border-top: 2px solid black; 
 }
 

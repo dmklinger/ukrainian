@@ -128,8 +128,7 @@ var main = (data) => {
 			const tense_label_width = tense === 'imp' ? 3 : 2
 			const tense_label_tr = table.append('tr')
 			tense_label_tr.append('th')
-				.attr('id', 'leftLabel')
-				.attr('class', 'tenseMarker')
+				.attr('id', 'tenseMarker')
 				.text(tense_label)
 			tense_label_tr.selectAll()
 				.data(tense_categories)
