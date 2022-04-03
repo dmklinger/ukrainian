@@ -7,7 +7,6 @@ body {
 	display: flex;
 	justify-content: center;
 	width: max(800px, 30%);
-	height: 70px;
 	background-color: white;
 	top: 0;
 	margin: 8px;
