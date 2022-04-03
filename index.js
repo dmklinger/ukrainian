@@ -202,11 +202,14 @@ var main = (data) => {
 		}
 	}
 
-	tr.selectAll('div')
+	const div = tr.selectAll('div')
 		.data((d) => { return [d.info ? [d.pos, `(${d.info})`] : [d.pos], d.word, d.freq, d.defs, d.forms]; })
-			.join('div', update => update.html(''))
-			.attr('class', 'col')
-		.each(function(d, i) {
+			.enter()
+				.append('div')
+				.attr('class', 'col')
+	div.exit()
+		.remove()
+	div.each(function(d, i) {
 			let this_obj = d3.select(this)
 			switch (i) {
 				case 0: {
