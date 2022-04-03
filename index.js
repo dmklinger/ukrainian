@@ -2,7 +2,7 @@
 
 var main = (data) => {
 	let tr = d3.select(".main")
-		.selectAll('.main > div')
+		.selectAll('.main > .row:not(#header)')
 		.data(data)
 		.join('div')
 			.attr('class', 'row')
@@ -261,7 +261,6 @@ fetch('words.json')
 	.then(res => res.json())
 	.then(out => {
 		const data = out;
-		main(data.slice(0, 10));
 		main(data.slice(0, 300))
 	})
 	.catch(err => {throw err});

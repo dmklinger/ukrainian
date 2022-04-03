@@ -1,3 +1,26 @@
+body {
+	margin: 0
+}
+
+.topBar {
+	position: sticky;
+	width: max(1000px, 50%);
+	height: 30px;
+	background-color: lightgrey;
+	top: 0;
+	margin: 8px;
+	padding: 3px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+
+.topBar > div {
+	height: 30px;
+	display: table-cell;
+	vertical-align: middle;
+}
+
 .main {
 	width: max(1000px, 50%);
 	display: grid;
@@ -71,7 +94,8 @@ th:not(#leftLabel, #tenseMarker) {
 }
 
 #tenseMarker {
-	border-top: 2px solid black; 
+	border-bottom: 2px solid black; 
+	border-top: 2px solid black;
 }
 
 #ppLabel {
