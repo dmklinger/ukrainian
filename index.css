@@ -6,16 +6,21 @@ body {
 	position: sticky;
 	display: flex;
 	justify-content: center;
-	width: max(1000px, 50%);
+	width: max(800px, 50%);
 	height: 50px;
 	background-color: white;
 	top: 0;
 	margin: 8px;
-	padding: 3px;
+	padding-top: 3px;
+	padding-bottom: 3px;
 	margin-left: auto;
 	margin-right: auto;
 	text-align: center;
 	font-size: 14px
+}
+
+img {
+	height: 50px
 }
 
 
@@ -26,14 +31,14 @@ body {
 }
 
 .main {
-	width: max(1000px, 50%);
+	width: max(800px, 50%);
 	display: grid;
-	grid-template-columns: 1fr 1fr 1fr 3fr 5fr;
+	grid-template-columns: repeat(5, 1fr);
 	margin-left: auto;
 	margin-right: auto;
 	background-color: lightgrey;
 	grid-gap: 1px;
-	font-size: 12px;
+	font-size: 14px;
 }
 
 .row, #header {

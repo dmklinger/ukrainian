@@ -10,85 +10,101 @@ var main = (data) => {
 	let gf = (o, form) => { if (form in o) { return o[form] }; return ['—']; }  // get form
 
 	let single_noun_table = (obj, d) => {
-		let word_data = [
-			[['nom.'], ['acc.'], ['gen.'], ['dat.'], ['ins.'], ['loc.'], ['voc.']],
-			[gf(d, 'nom n'), gf(d, 'acc n'), gf(d, 'gen n'), gf(d, 'dat n'), gf(d, 'ins n'), gf(d, 'loc n'), gf(d, 'voc n')]
+		const word_data = [
+			['Nom.', gf(d, 'nom n')],
+			['Acc.', gf(d, 'acc n')],
+			['Gen.', gf(d, 'gen n')],
+			['Dat.', gf(d, 'dat n')],
+			['Ins.', gf(d, 'ins n')],
+			['Loc.', gf(d, 'loc n')],
+			['Voc.', gf(d, 'voc n')],
 		]
-		obj.append('table')
-			.selectAll()
-			.data(word_data)
-			.join('tr')
-			.each(function(d, i) {
-				let itemTag = i === 0 ? 'th' : 'td';
-				d3.select(this)
-					.selectAll()
-					.data((d) => { return d })
-					.join(itemTag).selectAll()
-					.data((d) => { return d })
-					.join('p')
-					.text((d) => { return d })	
-			})	
+		const table = obj.append('table')
+		for (let i=0; i < word_data.length; i++) {
+			const row = word_data[i]
+			const this_row = table.append('tr')
+			this_row.append('th')
+				.attr('id', 'leftLabel')
+				.text(row[0])
+			this_row.append('td')
+				.selectAll('p')
+				.data(row[1])
+				.join('p')
+				.text((d) => { return d })	
+		}
 	}
 
 	let noun_table = (obj, d) => {
-		let word_data = [
-			[['nom.'], ['acc.'], ['gen.'], ['dat.'], ['ins.'], ['loc.'], ['voc.']],
-			[gf(d, 'nom ns'), gf(d, 'acc ns'), gf(d, 'gen ns'), gf(d, 'dat ns'), gf(d, 'ins ns'), gf(d, 'loc ns'), gf(d, 'voc ns')],
-			[gf(d, 'nom np'), gf(d, 'acc np'), gf(d, 'gen np'), gf(d, 'dat np'), gf(d, 'ins np'), gf(d, 'loc np'), gf(d, 'voc np')]
+		const word_data = [
+			['Nom.', gf(d, 'nom ns'), gf(d, 'nom np')],
+			['Acc.', gf(d, 'acc ns'), gf(d, 'acc np')],
+			['Gen.', gf(d, 'gen ns'), gf(d, 'gen np')],
+			['Dat.', gf(d, 'dat ns'), gf(d, 'dat np')],
+			['Ins.', gf(d, 'ins ns'), gf(d, 'ins np')],
+			['Loc.', gf(d, 'loc ns'), gf(d, 'loc np')],
+			['Voc.', gf(d, 'voc ns'), gf(d, 'voc np')],
 		]
-		let table = obj.append('table')
-		table.selectAll()
-			.data(word_data)
-			.join('tr')
-			.each(function(d, i) {
-				let itemTag = i === 0 ? 'th' : 'td';
-				let numberLabel = '';
-				if (i === 1) { numberLabel = 'Sing.'}
-				if (i === 2) { numberLabel = 'Plur.'}
-				let t = d3.select(this)
-				t.append('th')
-						.attr('id', 'leftLabel')
-						.text(numberLabel)
-				t.selectAll()
-					.data((d) => { return d })
-					.join(itemTag).selectAll()
-					.data((d) => { return d })
-					.join('p')
-					.text((d) => { return d });
-			})
-			
+		const table = obj.append('table')
+		const header_row = table.append('tr')  // header row
+		header_row.append('th')
+			.attr('id', 'leftLabel')
+		header_row.append('th')
+			.text('Sing.')
+		header_row.append('th')
+			.text('Plur.')
+		for (let i=0; i < word_data.length; i++) {
+			const row = word_data[i]
+			const this_row = table.append('tr')
+			this_row.append('th')
+				.attr('id', 'leftLabel')
+				.text(row[0])
+			this_row.selectAll('td')
+				.data(row.slice(1))
+				.join('td')
+				.selectAll('p')
+				.data((d) => { return d })
+				.join('p')
+				.text((d) => { return d })	
+		};
 	}
 
 	let adjective_table = (obj, d) => {
-		let word_data = [
-			[['nom.'], ['acc.', '(anim.)'], ['acc.', '(inan.)'], ['gen.'], ['dat.'], ['ins.'], ['loc.']],
-			[gf(d, 'nom am'), gf(d, 'gen am'), gf(d, 'nom am'), gf(d, 'gen am'), gf(d, 'dat am'), gf(d, 'ins am'), gf(d, 'loc am')],
-			[gf(d, 'nom an'), gf(d, 'nom an'), gf(d, 'nom an'), gf(d, 'gen an'), gf(d, 'dat an'), gf(d, 'ins an'), gf(d, 'loc an')],
-			[gf(d, 'nom af'), gf(d, 'acc af'), gf(d, 'acc af'), gf(d, 'gen af'), gf(d, 'dat af'), gf(d, 'ins af'), gf(d, 'loc af')],
-			[gf(d, 'nom ap'), gf(d, 'gen ap'), gf(d, 'nom ap'), gf(d, 'gen ap'), gf(d, 'dat ap'), gf(d, 'ins ap'), gf(d, 'loc ap')]
+		const word_data = [
+			['Nom.', gf(d, 'nom am'), gf(d, 'nom an'), gf(d, 'nom af'), gf(d, 'nom ap')],
+			['Anim. Acc.', gf(d, 'gen am'), gf(d, 'nom an'), gf(d, 'acc af'), gf(d, 'gen ap')],
+			['Inan. Acc.', gf(d, 'nom am'), gf(d, 'nom an'), gf(d, 'acc af'), gf(d, 'nom ap')],
+			['Gen.', gf(d, 'gen am'), gf(d, 'gen an'), gf(d, 'gen af'), gf(d, 'gen ap')],
+			['Dat.', gf(d, 'dat am'), gf(d, 'dat an'), gf(d, 'dat af'), gf(d, 'dat ap')],
+			['Ins.', gf(d, 'ins am'), gf(d, 'ins an'), gf(d, 'ins af'), gf(d, 'ins ap')],
+			['Loc.', gf(d, 'loc am'), gf(d, 'loc an'), gf(d, 'loc af'), gf(d, 'loc ap')],
 		]
-		let table = obj.append('table')
-		table.selectAll()
-			.data(word_data)
-			.join('tr')
-			.each(function(d, i) {
-				let itemTag = i === 0 ? 'th' : 'td';
-				let numberLabel = '';
-				if (i === 1) { numberLabel = 'Male'}
-				if (i === 2) { numberLabel = 'Neut.'}
-				if (i === 3) { numberLabel = 'Fem.'}
-				if (i === 4) { numberLabel = 'Plur.'}
-				let t = d3.select(this)
-				t.append('th')
-						.attr('id', 'leftLabel')
-						.text(numberLabel)
-				t.selectAll()
-					.data((d) => { return d })
-					.join(itemTag).selectAll()
-					.data((d) => { return d })
-					.join('p')
-					.text((d) => { return d });
-			})
+
+		const table = obj.append('table')
+		const header_row = table.append('tr')  // header row
+		header_row.append('th')
+			.attr('id', 'leftLabel')
+		header_row.append('th')
+			.text('Male')
+		header_row.append('th')
+			.text('Neut.')
+		header_row.append('th')
+			.text('Fem.')
+		header_row.append('th')
+			.text('Plur.')
+		for (let i=0; i < word_data.length; i++) {
+			const row = word_data[i]
+			const this_row = table.append('tr')
+			this_row.append('th')
+				.attr('id', 'leftLabel')
+				.text(row[0])
+			this_row.selectAll('td')
+				.data(row.slice(1))
+				.join('td')
+				.selectAll('p')
+				.data((d) => { return d })
+				.join('p')
+				.text((d) => { return d })	
+		};
 	}
 
 	let verb_table = (obj, d) => {
