@@ -35,7 +35,7 @@ body {
 	font-size: 12px;
 }
 
-.row, #header {
+.row {
 	display: contents;
 }
 

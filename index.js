@@ -1,9 +1,8 @@
 'use strict';
 
 var main = (data) => {
-	console.log(data);
 	let tr = d3.select(".main")
-		.selectAll('.row')
+		.selectAll('.main > .row:not(#header)')
 		.data(data)
 		.join('div')
 			.attr('class', 'row')
@@ -16,16 +15,15 @@ var main = (data) => {
 			[gf(d, 'nom n'), gf(d, 'acc n'), gf(d, 'gen n'), gf(d, 'dat n'), gf(d, 'ins n'), gf(d, 'loc n'), gf(d, 'voc n')]
 		]
 		obj.append('table')
-			.selectAll('tr')
+			.selectAll()
 			.data(word_data)
 			.join('tr')
 			.each(function(d, i) {
 				let itemTag = i === 0 ? 'th' : 'td';
 				d3.select(this)
-					.selectAll(itemTag)
+					.selectAll()
 					.data((d) => { return d })
-					.join(itemTag)
-					.selectAll('p')
+					.join(itemTag).selectAll()
 					.data((d) => { return d })
 					.join('p')
 					.text((d) => { return d })	
@@ -39,7 +37,7 @@ var main = (data) => {
 			[gf(d, 'nom np'), gf(d, 'acc np'), gf(d, 'gen np'), gf(d, 'dat np'), gf(d, 'ins np'), gf(d, 'loc np'), gf(d, 'voc np')]
 		]
 		let table = obj.append('table')
-		table.selectAll('tr')
+		table.selectAll()
 			.data(word_data)
 			.join('tr')
 			.each(function(d, i) {
@@ -51,10 +49,9 @@ var main = (data) => {
 				t.append('th')
 						.attr('id', 'leftLabel')
 						.text(numberLabel)
-				t.selectAll(itemTag)
+				t.selectAll()
 					.data((d) => { return d })
-					.join(itemTag)
-					.selectAll('p')
+					.join(itemTag).selectAll()
 					.data((d) => { return d })
 					.join('p')
 					.text((d) => { return d });
@@ -71,7 +68,7 @@ var main = (data) => {
 			[gf(d, 'nom ap'), gf(d, 'gen ap'), gf(d, 'nom ap'), gf(d, 'gen ap'), gf(d, 'dat ap'), gf(d, 'ins ap'), gf(d, 'loc ap')]
 		]
 		let table = obj.append('table')
-		table.selectAll('tr')
+		table.selectAll()
 			.data(word_data)
 			.join('tr')
 			.each(function(d, i) {
@@ -85,10 +82,9 @@ var main = (data) => {
 				t.append('th')
 						.attr('id', 'leftLabel')
 						.text(numberLabel)
-				t.selectAll(itemTag)
+				t.selectAll()
 					.data((d) => { return d })
-					.join(itemTag)
-					.selectAll('p')
+					.join(itemTag).selectAll()
 					.data((d) => { return d })
 					.join('p')
 					.text((d) => { return d });
@@ -108,7 +104,7 @@ var main = (data) => {
 			.text('Inf.')
 		inf_tr.append('td')
 			.attr('colspan', 6)
-			.selectAll('p')
+			.selectAll()
 			.data(gf(d, 'inf'))
 			.join('p')
 			.text((d) => { return d });
@@ -131,7 +127,7 @@ var main = (data) => {
 			tense_label_tr.append('th')
 				.attr('id', 'tenseMarker')
 				.text(tense_label)
-			tense_label_tr.selectAll('th')
+			tense_label_tr.selectAll()
 				.data(tense_categories)
 				.join('th')
 				.attr('colspan', tense_label_width)
@@ -154,17 +150,17 @@ var main = (data) => {
 				if (tense === 'past' && number === 'p') {
 					number_label_tr.append('td')
 						.attr('colspan', 6)
-						.selectAll('p')
+						.selectAll()
 						.data(gf(d['past'], 'p'))
 						.join('p')
 						.text((d) => { return d; })
 				}
 				else {
-					number_label_tr.selectAll('td')
+					number_label_tr.selectAll()
 						.data(tense_categories)
 						.join('td')
 						.attr('colspan', tense_label_width)
-						.selectAll('p')
+						.selectAll()
 						.data((tc) => {
 							const form = `${tc}${number}`
 							return gf(d[tense], form)
@@ -196,7 +192,7 @@ var main = (data) => {
 					participle_tr.append('td')
 						.attr('colspan', 6)
 						.attr('id', 'ppLabel')
-						.selectAll('p')
+						.selectAll()
 						.data(gf(d[tense]['pp'], pp))
 						.join('p')
 						.text((d) => { return d; })
@@ -206,16 +202,16 @@ var main = (data) => {
 		}
 	}
 
-	tr.selectAll('.col')
+	tr.selectAll()
 		.data((d) => { return [d.info ? [d.pos, `(${d.info})`] : [d.pos], d.word, d.freq, d.defs, d.forms]; })
-		.join('div')
+			.enter()
+		.append('div')
 			.attr('class', 'col')
 		.each(function(d, i) {
-			const this_obj = d3.select(this)
+			let this_obj = d3.select(this)
 			switch (i) {
 				case 0: {
-					this_obj
-						.selectAll('p')
+					this_obj.selectAll()
 						.data(d)
 						.join('p')
 						.text((d) => { return d; });
@@ -224,7 +220,7 @@ var main = (data) => {
 				case 3: {
 					this_obj.attr('id', 'def')
 						.append('ul')
-						.selectAll('li')
+						.selectAll()
 						.data(d)
 						.join('li')
 						.text((d) => { return d;});
@@ -261,26 +257,10 @@ var main = (data) => {
 		});
 }
 
-let data;
-let offset = 0
-let numDisplayed = 300
-let curOffset = offset
-let curDisplayed = numDisplayed
-
 fetch('words.json')
 	.then(res => res.json())
 	.then(out => {
-		data = out;
-		main(data.slice(offset, numDisplayed));
+		const data = out;
+		main(data.slice(0, 300))
 	})
 	.catch(err => {throw err});
-
-window.onscroll = (_) => {
-	if (window.innerHeight + window.scrollY + 1000 >= document.body.offsetHeight) {
-		if (numDisplayed >= 1000) {
-			offset += 100;
-		} else { numDisplayed += 100; }
-		console.log(offset, offset + numDisplayed)
-		main(data.slice(offset, offset + numDisplayed));
-	}
-}
