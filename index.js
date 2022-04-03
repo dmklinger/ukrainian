@@ -1,12 +1,9 @@
 'use strict';
 
 var main = (data) => {
-	let data_sliced = data.slice(0, 300)
-	let tr = d3.select("body")
-		.append('div')
-			.attr('class', 'main')
-			.selectAll()
-		.data(data_sliced)
+	let tr = d3.select(".main")
+		.selectAll('.main > div')
+		.data(data)
 		.join('div')
 			.attr('class', 'row')
 
@@ -262,5 +259,9 @@ var main = (data) => {
 
 fetch('words.json')
 	.then(res => res.json())
-	.then(out => { main(out); })
+	.then(out => {
+		const data = out;
+		main(data.slice(0, 10));
+		main(data.slice(0, 300))
+	})
 	.catch(err => {throw err});
