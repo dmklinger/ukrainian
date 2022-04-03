@@ -4,21 +4,24 @@ body {
 
 .topBar {
 	position: sticky;
+	display: flex;
+	justify-content: center;
 	width: max(1000px, 50%);
 	height: 30px;
-	background-color: lightgrey;
+	background-color: white;
 	top: 0;
 	margin: 8px;
 	padding: 3px;
 	margin-left: auto;
 	margin-right: auto;
+	text-align: center;
 }
 
 
 .topBar > div {
-	height: 30px;
-	display: table-cell;
-	vertical-align: middle;
+	padding-left: 10px;
+	padding-right: 10px;
+	margin: auto;
 }
 
 .main {
