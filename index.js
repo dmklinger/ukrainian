@@ -219,7 +219,11 @@ var main = (data) => {
 	}
 
 	const div = tr.selectAll('div')
-		.data((d) => { return [d.info ? [d.pos, `(${d.info})`] : [d.pos], d.word, d.freq, d.defs, d.forms]; })
+		.data((d) => { return [
+				d.info ? [d.pos, `(${d.info})`] : [d.pos], 
+				d.freq ? [d.word, `(${d.freq})`] : [d.word], 
+				d.defs, d.forms
+			]; })
 			.enter()
 				.append('div')
 				.attr('class', 'col')
@@ -228,14 +232,14 @@ var main = (data) => {
 	div.each(function(d, i) {
 			let this_obj = d3.select(this)
 			switch (i) {
-				case 0: {
+				case 0: case 1: {
 					this_obj.selectAll()
 						.data(d)
 						.join('p')
 						.text((d) => { return d; });
 					break;
 				}
-				case 3: {
+				case 2: {
 					this_obj.attr('id', 'def')
 						.append('ul')
 						.selectAll()
@@ -244,7 +248,7 @@ var main = (data) => {
 						.text((d) => { return d;});
 					break;
 				}
-				case 4: {
+				case 3: {
 					this_obj.attr('id', 'forms')
 					if ('nom n' in d || 'acc n' in d) {
 						single_noun_table(this_obj, d)
