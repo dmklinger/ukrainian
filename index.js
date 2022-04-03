@@ -94,6 +94,74 @@ var main = (data) => {
 			})
 	}
 
+	let verb_table = (obj, d) => {
+		/* obj.append('p').text(JSON.stringify(d)) */
+		let cols = 0
+		let tenses = []
+		for (const tense of ['past', 'pres', 'fut']) {
+			if (tense in d) { cols += 3; tenses.push(tense)}
+		}
+		for (const tense of ['imp']) {
+			if (tense in d) { cols += 2; tenses.push(tense)}
+		}		
+		const table = obj.append('table')
+		const inf_tr = table.append('tr')
+		inf_tr.append('th')
+			.attr('id', 'leftLabel')
+			.text('Inf.')
+		inf_tr.append('td')
+			.attr('colspan', cols)
+			.selectAll()
+			.data(gf(d, 'inf'))
+			.join('p')
+			.text((d) => { return d });
+
+		const tenses_tr = table.append('tr')
+		tenses_tr.append('tr')
+		for (const tense of tenses) {
+			const span = tense === 'imp' ? 2 : 3
+			tenses_tr.append('th')
+				.attr('colspan', span)
+				.text(tense)
+		}
+		for (const number of ['s', 'p']) {
+			const num_tr = table.append('tr')
+			num_tr.append('th')
+				.attr('id', 'leftLabel')
+				.text(number === 's' ? 'Sing.' : 'Plur.')
+			for (const tense of tenses) {
+				if (tense === 'past') {
+					for (const gender of ['m', 'n', 'f']) {
+						if (number === 's') {
+							num_tr.append('td')
+								.selectAll()
+								.data(gf(d[tense], `${gender}${number}`))
+								.join('p')
+								.text((d) => { return d });
+						}
+						else if (gender === 'm') {
+							num_tr.append('td')
+								.attr('colspan', 3)
+								.selectAll()
+								.data(gf(d[tense], 'p'))
+								.join('p')
+								.text((d) => { return d });
+						}
+					}
+				}
+				else {
+					for (const person of (tense === 'imp' ? [1, 2] : [1, 2, 3])) {
+						num_tr.append('td')
+							.selectAll()
+							.data(gf(d[tense], `${person}${number}`))
+							.join('p')
+							.text((d) => { return d });
+					}
+				}
+			}
+		}
+	}
+
 	tr.selectAll()
 		.data((d) => { return [d.info ? [d.pos, `(${d.info})`] : [d.pos], d.word, d.freq, d.defs, d.forms]; })
 			.enter()
@@ -130,8 +198,7 @@ var main = (data) => {
 						adjective_table(this_obj, d)
 					}
 					else if ('inf' in d) {
-						this_obj.append('p')
-							.text('verb form')
+						verb_table(this_obj, d)
 					}
 					else if (Object.keys(d).length > 0) { 
 						this_obj.text(JSON.stringify(d)) 
