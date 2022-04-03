@@ -70,12 +70,13 @@ th:not(#leftLabel) {
 	text-align: right;
 }
 
-#tenseLabel {
-	border-top: 1px solid lightgrey;
+.tenseMarker {
+	border-top: 2px solid black; 
 }
 
 #ppLabel {
-	border-top: 2px dotted lightgrey
+	border-top: 2px dotted lightgrey;
+	border-bottom: 2px dotted lightgrey;
 }
 
 td {

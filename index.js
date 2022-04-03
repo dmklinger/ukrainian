@@ -119,13 +119,6 @@ var main = (data) => {
 				'fut': 'Fut.',
 				'imp': 'Imp.'
 			}[tense]
-			const tenses_tr = table.append('tr')
-			tenses_tr.append('th')
-				.attr('id', 'leftLabel')  // no left label
-			tenses_tr.append('th')
-				.attr('colspan', 6)
-				.attr('id', 'tenseLabel')
-				.text(tense_label)
 			const tense_categories = 
 				(tense === 'past') 
 				? ['m', 'n', 'f']
@@ -135,7 +128,9 @@ var main = (data) => {
 			const tense_label_width = tense === 'imp' ? 3 : 2
 			const tense_label_tr = table.append('tr')
 			tense_label_tr.append('th')
-				.attr('id', 'leftLabel')  // no left label
+				.attr('id', 'leftLabel')
+				.attr('class', 'tenseMarker')
+				.text(tense_label)
 			tense_label_tr.selectAll()
 				.data(tense_categories)
 				.join('th')
