@@ -1,11 +1,12 @@
 'use strict';
 
 var main = (data) => {
+	console.log(data)
 	let tr = d3.select(".main")
 		.selectAll('.row')
-		.data(data)
+		.data(data, (d) => { return JSON.stringify([d.word, d.pos]) })
 		.join('div')
-			.attr('class', 'row')
+	tr.attr('class', 'row')
 
 	let gf = (o, form) => { if (form in o) { return o[form] }; return ['—']; }  // get form
 
@@ -224,7 +225,7 @@ var main = (data) => {
 		]; })
 		.enter()
 			.append('div')
-			.attr('class', 'col')
+	div.attr('class', 'col')
 	div.exit()
 		.remove()
 	div.each(function(d, i) {
@@ -274,6 +275,8 @@ var main = (data) => {
 
 let numDisplayed = 300
 let data;
+let freq_data;
+let alpha_data;
 
 document.addEventListener('copy', (event) => {
 	if (!document.querySelector('#stressCopy').checked) {
@@ -287,7 +290,55 @@ fetch('words.json')
 	.then(res => res.json())
 	.then(out => {
 		data = out;
+		freq_data = data;
 		main(data.slice(0, numDisplayed))
+		alpha_data = d3.sort(
+			[...data], 
+			x => x.word.toLowerCase()
+				.replaceAll('\u0301', '')
+				.split('')
+				.map((y) => {
+					const letters = Object({
+						'а': '0',
+						'б': '1',
+						'в': '2',
+						'г': '3',
+						'ґ': '4',
+						'д': '5',
+						'е': '6',
+						'є': '7',
+						'ж': '8',
+						'з': '9',
+						'и': ':',
+						'і': ';',
+						'ї': '<',
+						'й': '?',
+						'к': '@',
+						'л': 'A',
+						'м': 'B',
+						'н': 'C',
+						'о': 'D',
+						'п': 'E',
+						'р': 'F',
+						'с': 'G',
+						'т': 'H',
+						'у': 'I',
+						'ф': 'K',
+						'х': 'L',
+						'ц': 'M',
+						'ч': 'N',
+						'ш': 'O',
+						'щ': 'P',
+						'ь': 'Q',
+						'ю': 'R',
+						'я': 'S',
+						"'": 'T'
+					})
+					if (y in letters) return letters[y]
+					return ''
+				})
+				.join()
+		)
 	})
 	.catch(err => {throw err});
 
@@ -296,4 +347,13 @@ window.onscroll = (_) => {
 		numDisplayed += 100
 		main(data.slice(0, numDisplayed));
 	}
+}
+
+function select() {
+	const sort_info = document.querySelector('select').value
+	if (sort_info === 'freq') { data = freq_data }; 
+	if (sort_info === 'alpha') { data = alpha_data }; 
+	if (sort_info === 'alpha_rev') { data = d3.reverse(alpha_data) };
+	numDisplayed = 300;
+	main(data.slice(0, numDisplayed))
 }
