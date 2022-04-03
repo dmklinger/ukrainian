@@ -1,5 +1,5 @@
 body {
-	margin: 0
+	margin: 0;
 }
 
 .topBar {
@@ -7,7 +7,7 @@ body {
 	display: flex;
 	justify-content: center;
 	width: max(1000px, 50%);
-	height: 30px;
+	height: 50px;
 	background-color: white;
 	top: 0;
 	margin: 8px;
@@ -15,6 +15,7 @@ body {
 	margin-left: auto;
 	margin-right: auto;
 	text-align: center;
+	font-size: 14px
 }
 
 

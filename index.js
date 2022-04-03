@@ -265,7 +265,7 @@ let data;
 document.addEventListener('copy', (event) => {
 	if (!document.querySelector('#stressCopy').checked) {
 		const selection = document.getSelection()
-		event.clipboardData.setData('text/plain', selection.toString().replace('\u0301', ''))
+		event.clipboardData.setData('text/plain', selection.toString().replaceAll('\u0301', ''))
 		event.preventDefault()
 	}
 })
