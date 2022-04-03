@@ -7,7 +7,7 @@ body {
 	display: flex;
 	justify-content: center;
 	width: max(800px, 30%);
-	height: 50px;
+	height: 70px;
 	background-color: white;
 	top: 0;
 	margin: 8px;
@@ -16,7 +16,8 @@ body {
 	margin-left: auto;
 	margin-right: auto;
 	text-align: center;
-	font-size: 14px
+	font-size: 14px;
+	border-bottom: 2px solid lightgrey;
 }
 
 img {
