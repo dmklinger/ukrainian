@@ -262,6 +262,14 @@ var main = (data) => {
 let numDisplayed = 300
 let data;
 
+document.addEventListener('copy', (event) => {
+	if (!document.querySelector('#stressCopy').checked) {
+		const selection = document.getSelection()
+		event.clipboardData.setData('text/plain', selection.toString().replace('\u0301', ''))
+		event.preventDefault()
+	}
+})
+
 fetch('words.json')
 	.then(res => res.json())
 	.then(out => {
