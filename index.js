@@ -2,7 +2,7 @@
 
 var main = (data) => {
 	let tr = d3.select(".main")
-		.selectAll('.main > .row:not(#header)')
+		.selectAll('.row')
 		.data(data)
 		.join('div')
 			.attr('class', 'row')
@@ -202,10 +202,9 @@ var main = (data) => {
 		}
 	}
 
-	tr.selectAll()
+	tr.selectAll('div')
 		.data((d) => { return [d.info ? [d.pos, `(${d.info})`] : [d.pos], d.word, d.freq, d.defs, d.forms]; })
-			.enter()
-		.append('div')
+			.join('div', update => update.html(''))
 			.attr('class', 'col')
 		.each(function(d, i) {
 			let this_obj = d3.select(this)
@@ -257,10 +256,20 @@ var main = (data) => {
 		});
 }
 
+let numDisplayed = 300
+let data;
+
 fetch('words.json')
 	.then(res => res.json())
 	.then(out => {
-		const data = out;
-		main(data.slice(0, 300))
+		data = out;
+		main(data.slice(0, numDisplayed))
 	})
 	.catch(err => {throw err});
+
+window.onscroll = (_) => {
+	if (window.innerHeight + window.scrollY + 1000 >= document.body.offsetHeight) {
+		numDisplayed += 100
+		main(data.slice(0, numDisplayed));
+	}
+}
