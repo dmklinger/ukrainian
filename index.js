@@ -217,64 +217,57 @@ var main = (data) => {
 
 		}
 	}
-
 	const div = tr.selectAll('div')
-		.data((d) => { return [
-				d.info ? [d.pos, `(${d.info})`] : [d.pos], 
-				d.freq ? [d.word, `(${d.freq})`] : [d.word], 
-				d.defs, d.forms
-			]; })
-			.enter()
-				.append('div')
-				.attr('class', 'col')
+		.data((d) => { 
+			return [
+			d, d.forms
+		]; })
+		.enter()
+			.append('div')
+			.attr('class', 'col')
 	div.exit()
 		.remove()
 	div.each(function(d, i) {
 			let this_obj = d3.select(this)
-			switch (i) {
-				case 0: case 1: {
-					this_obj.selectAll()
-						.data(d)
-						.join('p')
-						.text((d) => { return d; });
-					break;
+				.attr('id', 'def')
+			if (i === 0) {
+				this_obj.append('p')
+					.attr('class', 'title')
+					.append('b')
+					.text(d.word)
+				this_obj.append('p')
+					.attr('class', 'title')
+					.text(d.info ? ` (${d.pos} - ${d.info})` : ` (${d.pos})`)
+				this_obj.append('div')
+					.append('ul')
+					.selectAll()
+					.data(d.defs)
+					.join('li')
+					.text((d) => { return d;});
+			} else if (i === 1) {
+				this_obj.attr('id', 'forms')
+				if ('nom n' in d || 'acc n' in d) {
+					single_noun_table(this_obj, d)
 				}
-				case 2: {
-					this_obj.attr('id', 'def')
-						.append('ul')
-						.selectAll()
-						.data(d)
-						.join('li')
-						.text((d) => { return d;});
-					break;
+				else if ('nom ns' in d || 'nom np' in d) {
+					noun_table(this_obj, d)
 				}
-				case 3: {
-					this_obj.attr('id', 'forms')
-					if ('nom n' in d || 'acc n' in d) {
-						single_noun_table(this_obj, d)
-					}
-					else if ('nom ns' in d || 'nom np' in d) {
-						noun_table(this_obj, d)
-					}
-					else if ('nom am' in d) {
-						adjective_table(this_obj, d)
-					}
-					else if ('inf' in d) {
-						verb_table(this_obj, d)
-					}
-					else if (Object.keys(d).length > 0) { 
-						this_obj.text(JSON.stringify(d)) 
-					}
-					else {
-						this_obj.append('p')
-							.attr('id', 'indcl')
-							.append('i')
-							.text('indeclinable')
-							
-					}
-					break;
+				else if ('nom am' in d) {
+					adjective_table(this_obj, d)
 				}
-				default: this_obj.append('p').text(d);
+				else if ('inf' in d) {
+					verb_table(this_obj, d)
+				}
+				else if (Object.keys(d).length > 0) { 
+					this_obj.text(JSON.stringify(d)) 
+				}
+				else {
+					this_obj.append('p')
+						.attr('id', 'indcl')
+						.append('i')
+						.text('indeclinable')
+						
+				}
 			}
 		});
 }
