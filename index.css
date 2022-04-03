@@ -71,7 +71,11 @@ th:not(#leftLabel) {
 }
 
 #tenseLabel {
-	border-top: 2px dotted lightgrey;
+	border-top: 1px solid lightgrey;
+}
+
+#ppLabel {
+	border-top: 2px dotted lightgrey
 }
 
 td {

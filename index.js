@@ -156,20 +156,58 @@ var main = (data) => {
 				number_label_tr.append('th')
 					.attr('id', 'leftLabel')
 					.text(number_label)
-				number_label_tr.selectAll()
-					.data(tense_categories)
-					.join('td')
-					.attr('colspan', tense_label_width)
-					.selectAll()
-					.data((tc) => {
-						const form = (number === 'p' && tense === 'past') ? 'p' : `${tc}${number}`
-						console.log(form)
-						return gf(d[tense], form)
-					})
-					.join('p')
-					.text((d) => { return d; })
+				if (tense === 'past' && number === 'p') {
+					number_label_tr.append('td')
+						.attr('colspan', 6)
+						.selectAll()
+						.data(gf(d['past'], 'p'))
+						.join('p')
+						.text((d) => { return d; })
+				}
+				else {
+					number_label_tr.selectAll()
+						.data(tense_categories)
+						.join('td')
+						.attr('colspan', tense_label_width)
+						.selectAll()
+						.data((tc) => {
+							const form = `${tc}${number}`
+							return gf(d[tense], form)
+						})
+						.join('p')
+						.text((d) => { return d; })
+				}
 						
 			}
+
+			if ('pp' in d[tense]) {
+				/* Active, passive, adverbial, impersonal */
+
+				let pps = []
+				for (const pp of ['act', 'pas', 'adv', 'imp']) {
+					if (pp in d[tense]['pp']) { pps.push(pp) }
+				}
+				
+				for (const pp of pps) {
+					const participle_tr = table.append('tr')
+					participle_tr.append('th')
+						.attr('id', 'leftLabel')
+						.text({
+							'act': 'Act. Part.',
+							'pas': 'Pass. Part.',
+							'adv': 'Adv. Part.',
+							'imp': 'Imp. Part.'
+						}[pp])
+					participle_tr.append('td')
+						.attr('colspan', 6)
+						.attr('id', 'ppLabel')
+						.selectAll()
+						.data(gf(d[tense]['pp'], pp))
+						.join('p')
+						.text((d) => { return d; })
+				}
+			}
+
 		}
 	}
 
