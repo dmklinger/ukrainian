@@ -70,6 +70,10 @@ th:not(#leftLabel) {
 	text-align: right;
 }
 
+#tenseLabel {
+	border-top: 2px dotted lightgrey;
+}
+
 td {
 	text-align: center;
 	white-space: nowrap;

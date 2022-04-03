@@ -96,68 +96,79 @@ var main = (data) => {
 
 	let verb_table = (obj, d) => {
 		/* obj.append('p').text(JSON.stringify(d)) */
-		let cols = 0
 		let tenses = []
-		for (const tense of ['past', 'pres', 'fut']) {
-			if (tense in d) { cols += 3; tenses.push(tense)}
+		for (const tense of ['past', 'pres', 'fut', 'imp']) {
+			if (tense in d) { tenses.push(tense)}
 		}
-		for (const tense of ['imp']) {
-			if (tense in d) { cols += 2; tenses.push(tense)}
-		}		
 		const table = obj.append('table')
 		const inf_tr = table.append('tr')
 		inf_tr.append('th')
 			.attr('id', 'leftLabel')
 			.text('Inf.')
 		inf_tr.append('td')
-			.attr('colspan', cols)
+			.attr('colspan', 6)
 			.selectAll()
 			.data(gf(d, 'inf'))
 			.join('p')
 			.text((d) => { return d });
 
-		const tenses_tr = table.append('tr')
-		tenses_tr.append('tr')
 		for (const tense of tenses) {
-			const span = tense === 'imp' ? 2 : 3
+			const tense_label = {
+				'past': 'Past',
+				'pres': 'Pres.',
+				'fut': 'Fut.',
+				'imp': 'Imp.'
+			}[tense]
+			const tenses_tr = table.append('tr')
 			tenses_tr.append('th')
-				.attr('colspan', span)
-				.text(tense)
-		}
-		for (const number of ['s', 'p']) {
-			const num_tr = table.append('tr')
-			num_tr.append('th')
-				.attr('id', 'leftLabel')
-				.text(number === 's' ? 'Sing.' : 'Plur.')
-			for (const tense of tenses) {
-				if (tense === 'past') {
-					for (const gender of ['m', 'n', 'f']) {
-						if (number === 's') {
-							num_tr.append('td')
-								.selectAll()
-								.data(gf(d[tense], `${gender}${number}`))
-								.join('p')
-								.text((d) => { return d });
-						}
-						else if (gender === 'm') {
-							num_tr.append('td')
-								.attr('colspan', 3)
-								.selectAll()
-								.data(gf(d[tense], 'p'))
-								.join('p')
-								.text((d) => { return d });
-						}
-					}
-				}
-				else {
-					for (const person of (tense === 'imp' ? [1, 2] : [1, 2, 3])) {
-						num_tr.append('td')
-							.selectAll()
-							.data(gf(d[tense], `${person}${number}`))
-							.join('p')
-							.text((d) => { return d });
-					}
-				}
+				.attr('id', 'leftLabel')  // no left label
+			tenses_tr.append('th')
+				.attr('colspan', 6)
+				.attr('id', 'tenseLabel')
+				.text(tense_label)
+			const tense_categories = 
+				(tense === 'past') 
+				? ['m', 'n', 'f']
+				: (tense === 'imp')
+				? ['1', '2']
+				: ['1', '2', '3']
+			const tense_label_width = tense === 'imp' ? 3 : 2
+			const tense_label_tr = table.append('tr')
+			tense_label_tr.append('th')
+				.attr('id', 'leftLabel')  // no left label
+			tense_label_tr.selectAll()
+				.data(tense_categories)
+				.join('th')
+				.attr('colspan', tense_label_width)
+				.text((d) => { 
+					return {
+						'm': 'Male',
+						'n': 'Neuter',
+						'f': 'Fem.',
+						'1': '1st',
+						'2': '2nd',
+						'3': '3rd'
+					}[d]
+				})
+			for (const number of ['s', 'p']) {
+				const number_label_tr = table.append('tr')
+				const number_label = number === 's' ? 'Sing.' : 'Plur.'
+				number_label_tr.append('th')
+					.attr('id', 'leftLabel')
+					.text(number_label)
+				number_label_tr.selectAll()
+					.data(tense_categories)
+					.join('td')
+					.attr('colspan', tense_label_width)
+					.selectAll()
+					.data((tc) => {
+						const form = (number === 'p' && tense === 'past') ? 'p' : `${tc}${number}`
+						console.log(form)
+						return gf(d[tense], form)
+					})
+					.join('p')
+					.text((d) => { return d; })
+						
 			}
 		}
 	}
