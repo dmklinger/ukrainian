@@ -368,6 +368,10 @@ window.addEventListener("keydown", event => {
         event.preventDefault();
 		document.querySelector('input#search').focus();
     }
+	if (event.code === 'Escape') {
+		document.querySelector('input#search').value = ""
+		search();
+	}
 })
 
 function selectHelper() {
@@ -408,6 +412,7 @@ function select() {
 	sortInfo = document.querySelector('select#sort').value;
 	selectHelper();
 	filterHelper();
+	search();
 	main(data.slice(0, numDisplayed));
 }
 
@@ -415,6 +420,7 @@ function filter() {
 	curFilter = document.querySelector('select#filter').value;
 	selectHelper();
 	filterHelper();
+	search();
 	main(data.slice(0, numDisplayed));
 }
 
