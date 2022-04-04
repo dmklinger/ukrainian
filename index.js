@@ -392,7 +392,7 @@ function searchHelper() {
 			results = d3.filter(Object.keys(index[searchTerm[0]]), x => x === searchTerm)
 		}
 		else {
-			results = d3.filter(Object.keys(index[searchTerm[0]]), x => x.startsWith(searchTerm))
+			results = d3.filter(Object.keys(index[searchTerm[0]]), x => x.startsWith(searchTerm) || x === searchTerm)
 		}
 		if (results) {
 			let indexes = []
