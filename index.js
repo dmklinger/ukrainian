@@ -277,6 +277,8 @@ let numDisplayed = 300
 let data;
 let freq_data;
 let alpha_data;
+let curFilter;
+let sortInfo = 'freq'
 
 document.addEventListener('copy', (event) => {
 	if (!document.querySelector('#stressCopy').checked) {
@@ -350,10 +352,24 @@ window.onscroll = (_) => {
 }
 
 function select() {
-	const sort_info = document.querySelector('select').value
-	if (sort_info === 'freq') { data = freq_data }; 
-	if (sort_info === 'alpha') { data = alpha_data }; 
-	if (sort_info === 'alpha_rev') { data = d3.reverse(alpha_data) };
+	sortInfo = document.querySelector('select#sort').value;
+	if (sortInfo === 'freq') { data = freq_data }; 
+	if (sortInfo === 'alpha') { data = alpha_data }; 
+	if (sortInfo === 'alpha_rev') { data = d3.reverse(alpha_data) };
+	if (curFilter) { data = d3.filter(data, x => x.pos === curFilter )};
 	numDisplayed = 300;
-	main(data.slice(0, numDisplayed))
+	main(data.slice(0, numDisplayed));
+}
+
+function filter() {
+	curFilter = document.querySelector('select#filter').value;
+	if (sortInfo === 'freq') { data = freq_data }; 
+	if (sortInfo === 'alpha') { data = alpha_data }; 
+	if (sortInfo === 'alpha_rev') { data = d3.reverse(alpha_data) };
+	console.log(curFilter)
+	if (curFilter) {
+		data = d3.filter(data, x => x.pos === curFilter);
+		numDisplayed = 100;
+	}
+	main(data.slice(0, numDisplayed));
 }
