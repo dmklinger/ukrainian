@@ -4,7 +4,7 @@ var main = (data) => {
 	console.log(data)
 	let tr = d3.select(".main")
 		.selectAll('.row')
-		.data(data, (d) => { return JSON.stringify([d.word, d.pos]) })
+		.data(data, (d) => { return d.index })
 		.join('div')
 	tr.attr('class', 'row')
 
@@ -386,14 +386,21 @@ function filterHelper() {
 
 function searchHelper() {
 	if (index && searchTerm) {
-		const results = d3.filter(Object.keys(index[searchTerm[0]]), x => x.startsWith(searchTerm))
+		let results;
+		if (searchTerm.endsWith(' ')) {
+			searchTerm = searchTerm.trim();
+			results = d3.filter(Object.keys(index[searchTerm[0]]), x => x === searchTerm)
+		}
+		else {
+			results = d3.filter(Object.keys(index[searchTerm[0]]), x => x.startsWith(searchTerm))
+		}
 		if (results) {
 			let indexes = []
 			for (const res of results) {
 				indexes = indexes.concat(index[searchTerm[0]][res])
 			}
 			numDisplayed = 300;
-			data = d3.filter(data, (x, i, a) => indexes.includes(i))
+			data = d3.filter(data, x => indexes.includes(x.index))
 		}
 	}
 }
@@ -413,7 +420,7 @@ function filter() {
 
 function search() {
 	const oldSearch = searchTerm;
-	searchTerm = document.querySelector('input#search').value;
+	searchTerm = document.querySelector('input#search').value.toLowerCase();
 	if (oldSearch) {
 		selectHelper();
 		filterHelper();
