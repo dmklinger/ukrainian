@@ -254,7 +254,7 @@ var main = (data) => {
 				else if ('nom ns' in d || 'nom np' in d) {
 					noun_table(this_obj, d)
 				}
-				else if ('nom am' in d) {
+				else if ('nom am' in d || 'nom af' in d || 'nom an' in d || 'nom ap' in d) {
 					adjective_table(this_obj, d)
 				}
 				else if ('inf' in d) {
