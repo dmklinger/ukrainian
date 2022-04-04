@@ -148,6 +148,7 @@ var main = (data) => {
 				.data(tense_categories)
 				.join('th')
 				.attr('colspan', tense_label_width)
+				.attr('id', 'tenseHeader')
 				.text((d) => { 
 					return {
 						'm': 'Male',
@@ -278,7 +279,9 @@ let data;
 let freq_data;
 let alpha_data;
 let curFilter;
-let sortInfo = 'freq'
+let sortInfo = 'freq';
+let index;
+let searchTerm;
 
 document.addEventListener('copy', (event) => {
 	if (!document.querySelector('#stressCopy').checked) {
@@ -287,6 +290,11 @@ document.addEventListener('copy', (event) => {
 		event.preventDefault()
 	}
 })
+
+fetch('index.json')
+	.then(res => res.json() )
+	.then(out => { index = out; })
+	.catch(err => {throw err; });
 
 fetch('words.json')
 	.then(res => res.json())
@@ -351,25 +359,65 @@ window.onscroll = (_) => {
 	}
 }
 
-function select() {
-	sortInfo = document.querySelector('select#sort').value;
+document.querySelector('input#search').addEventListener("keydown", event => {
+	if (event.code === "Enter") { search(); };
+})
+
+window.addEventListener("keydown", event => {
+    if (event.code === 'F3' || (event.ctrlKey && event.code === 'KeyF')) { 
+        event.preventDefault();
+		document.querySelector('input#search').focus();
+    }
+})
+
+function selectHelper() {
 	if (sortInfo === 'freq') { data = freq_data }; 
 	if (sortInfo === 'alpha') { data = alpha_data }; 
 	if (sortInfo === 'alpha_rev') { data = d3.reverse(alpha_data) };
-	if (curFilter) { data = d3.filter(data, x => x.pos === curFilter )};
 	numDisplayed = 300;
+}
+
+function filterHelper() {
+	if (curFilter) {
+		data = d3.filter(data, x => x.pos === curFilter);
+		numDisplayed = 100;
+	}
+}
+
+function searchHelper() {
+	if (index && searchTerm) {
+		const results = d3.filter(Object.keys(index[searchTerm[0]]), x => x.startsWith(searchTerm))
+		if (results) {
+			let indexes = []
+			for (const res of results) {
+				indexes = indexes.concat(index[searchTerm[0]][res])
+			}
+			numDisplayed = 300;
+			data = d3.filter(data, (x, i, a) => indexes.includes(i))
+		}
+	}
+}
+function select() {
+	sortInfo = document.querySelector('select#sort').value;
+	selectHelper();
+	filterHelper();
 	main(data.slice(0, numDisplayed));
 }
 
 function filter() {
 	curFilter = document.querySelector('select#filter').value;
-	if (sortInfo === 'freq') { data = freq_data }; 
-	if (sortInfo === 'alpha') { data = alpha_data }; 
-	if (sortInfo === 'alpha_rev') { data = d3.reverse(alpha_data) };
-	console.log(curFilter)
-	if (curFilter) {
-		data = d3.filter(data, x => x.pos === curFilter);
-		numDisplayed = 100;
-	}
+	selectHelper();
+	filterHelper();
 	main(data.slice(0, numDisplayed));
+}
+
+function search() {
+	const oldSearch = searchTerm;
+	searchTerm = document.querySelector('input#search').value;
+	if (oldSearch) {
+		selectHelper();
+		filterHelper();
+	}
+	searchHelper();
+	main(data.slice(0, numDisplayed))
 }

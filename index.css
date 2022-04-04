@@ -118,13 +118,18 @@ th:not(#leftLabel, #tenseMarker) {
 }
 
 #tenseMarker {
-	border-bottom: 2px solid black; 
+	/* border-bottom: 2px dashed black;  */
 	border-top: 2px solid black;
 }
 
 #ppLabel {
 	border-top: 2px dotted lightgrey;
 	border-bottom: 2px dotted lightgrey;
+}
+
+#tenseHeader {
+	border-top: 2px dashed black;
+	z-index: 1;
 }
 
 td {
