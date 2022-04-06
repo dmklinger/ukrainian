@@ -1,4 +1,4 @@
-from dictionary import Ontolex
+from ontolex import Ontolex
 
 o = Ontolex(read='ontolex_data.json')
 d = o.get_dictionary()
