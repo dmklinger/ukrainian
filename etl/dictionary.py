@@ -109,7 +109,7 @@ class Ontolex:
 		dict = Dictionary()
 		for _, word in self.words.items():
 			translations = word.get_translations()
-		dict.add_to_dictionary(translations)
+			dict.add_to_dictionary(translations)
 		return dict
 
 	def get_dict(self):
@@ -152,6 +152,9 @@ class Usage:
 			[item for pair in zip(self.get_definitions(), other.get_definitions()) for item in pair]
 		)
 
+	def get_dict(self):
+		return self.get_definitions()
+
 
 class Word:
 
@@ -171,11 +174,17 @@ class Word:
 		u.add_definition(definition)
 
 	def merge(self, other):
-		for pos, usage in other:
+		for pos, usage in other.usages.items():
 			if pos in self.usages:
 				self.usages[pos].merge(usage)
 			else:
 				self.usages[pos] = usage
+
+	def get_dict(self):
+		dict = {}
+		for k, v in self.usages.items():
+			dict[k] = v.get_dict()
+		return dict
 
 
 class Dictionary:
@@ -193,7 +202,19 @@ class Dictionary:
 			for w in to_add:
 				self.add_to_dictionary(w)
 
-	def to_dict(self):
+	def get_dict(self):
 		dict = {}
-		for k, v in self.dict:
-			dict[k] = v.to_dict()
+		for k, v in self.dict.items():
+			dict[k] = v.get_dict()
+		return dict
+
+	def dump(self, loc, indent=None):
+		with open(f'data/{loc}', 'w+', encoding='utf-8') as f:
+			if indent:
+				f.write(
+					json.dumps(self.get_dict(), indent=indent, ensure_ascii=False)
+				)
+			else:
+				f.write(
+					json.dumps(self.get_dict(), ensure_ascii=False)
+				)
