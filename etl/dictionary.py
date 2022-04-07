@@ -37,13 +37,13 @@ class Usage:
 	def get_alerted_words(self):
 		for d in self.alerted_definitions.keys():
 			initial_index = None
+			found_word = ''
 			for i, x in enumerate(d):
 				if x in cyrillic + ' ' + "'":
 					found_word = found_word + x
 				if x in cyrillic + "'" and initial_index is None:
 					initial_index = i
 			found_word = found_word.strip()
-			match = re.search('“(.*)”', d)
 
 	def get_definitions(self):
 		return list(self.definitions)
@@ -68,7 +68,7 @@ class Word:
 	def get_word_no_accent(self):
 		return self.word.replace("́", "")
 
-	def add_definition(self, pos, definition, alert=False):
+	def add_definition(self, pos, definition):
 		replace = {
 			'conjunction': 'particle',
 			'determiner': 'particle',
@@ -86,12 +86,30 @@ class Word:
 			if pos not in definition:
 				definition = f"{definition} ({pos})"
 			pos = replace[pos]
+		if '[1]' in definition:
+			definition = definition.replace('[1]', '')
+		elif definition.endswith(']') and '[' not in definition:
+			definition = definition[:-1]
+		for x, y in [('(2)', ''), ('“', '"'), ('”', '"'), (r'{{', ''), (r'}}', '')]:
+			if x in definition:
+				definition = definition.replace(x, y)
+		if definition == 'This term needs a translation to English. Please help out and add a translation, then remove the text':
+			return  # No
+		if definition == 'This term needs a translation to English. Please help out and add a translation, then remove the text rfdef.':
+			return # No
+
 		if pos in self.usages:
 			u = self.usages[pos]
 		else:
 			u = Usage(self.word, pos)
 			self.usages[pos] = u
-		u.add_definition(definition, alert=alert)
+		if ' of ' in definition and definition.split(' of ')[1][0] in cyrillic:
+			if ':' in definition or ';' in definition:
+				u.add_definition(definition, alert=False)
+			else:
+				u.add_definition(definition, alert=True)
+		else:
+			u.add_definition(definition, alert=False)
 
 	def merge(self, other):
 		for pos, usage in other.usages.items():
@@ -143,6 +161,8 @@ class Dictionary:
 				self.dict[to_add.word] = to_add
 
 	def _add_word_to_dictionary(self, to_add):
+		if len(to_add.usages.keys()) == 0:
+			return
 		if to_add.word in self.dict:
 			self.dict[to_add.word].merge(to_add)
 		else:
@@ -169,7 +189,7 @@ class Dictionary:
 		try:
 			for i, w in enumerate(words):
 				if i % 100 == 0:
-					print(f"{i // 100} of {n // 100}")
+					print(f"{i} of {n}")
 				result = extract.get_wiktionary_word(w)
 				for r in result:
 					self.add_to_dictionary(r)

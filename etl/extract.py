@@ -14,10 +14,9 @@ try:
 except:  # does not exist yet
 	wiktionary_cache = {}
 
-cyrillic = "ЄІЇАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюяєії"
 
 def get_ontolex(use_cache=True):
-	if use_cache and os.exists('data/raw_dbnary_dump.ttl'):
+	if use_cache and os.path.exists('data/raw_dbnary_dump.ttl'):
 		return
 	session = requests.session()
 	print('downloading latest ontolex data from dbnary')
@@ -79,20 +78,8 @@ def get_wiktionary_word(word, use_cache=True):
 			if d.dl:
 				d.dl.decompose()
 			d = d.text.strip()
-			if '[1]' in d:
-				d = d.replace('[1]', '')
-			elif d.endswith(']'):
-				d = d[:-1]
-			if 'This term needs a translation to English. Please help out and add a translation, then remove the text' in d:
-				None  # No
-			else:
-				if ' of ' in d and d.split(' of ')[1][0] in cyrillic:
-					if ':' in d or ';' in d:
-						w.add_definition(pos, d, alert=True)
-				else:
-					w.add_definition(pos, d)
-		if len(w.usages.keys()) > 0:
-			results.append(w)
+			w.add_definition(pos, d)
+		results.append(w)
 	return results
 
 

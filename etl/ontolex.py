@@ -37,15 +37,16 @@ class Ontolex_Word:
 		for _, gloss_data in self.data.items():
 			pos, definition, translations = gloss_data['pos'], gloss_data['def'], gloss_data['translation']
 			for t in translations:
-				if not definition:
-					definition = self.word
-				if self.word not in definition:
-					definition = f"{self.word}, {definition}"
 				if t in results:
 					w = results[t]
 				else:
 					w = Word(t)
-				w.add_definition(pos, definition)
+				if not definition:
+					definition = self.word
+				if self.word not in definition:
+					w.add_definition(pos, self.word)
+				else:
+					w.add_definition(pos, definition)
 				results.append(w)
 		return results
 
