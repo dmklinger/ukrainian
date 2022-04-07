@@ -55,17 +55,20 @@ class Ontolex_Word:
 
 class Ontolex:
 
-	def __init__(self, get_data=False, read=None):
-		if get_data:
-			extract.get_ontolex()
-		self.words = {}
-		if read:
-			with open(f"data/{read}", 'r', encoding='utf-8') as f:
-				data = json.loads(f.read())
-			for w, o_w in data.items():
-				self.words[w] = Ontolex_Word(w, o_w)
-		else:
-			self.parse_ontolex()
+	def __init__(self, use_cache=True, use_raw_cache=True):	
+		self.words = {}	
+		if use_cache:
+			try:
+				with open(f"data/ontolex_data.json", 'r', encoding='utf-8') as f:
+					data = json.loads(f.read())
+				for w, o_w in data.items():
+					self.words[w] = Ontolex_Word(w, o_w)
+				return
+			except:
+				pass
+		extract.get_ontolex(use_cache=use_raw_cache)
+		self.parse_ontolex()
+		self.dump('ontolex_data.json')
 
 	def get_word(self, word):
 		if word not in self.words:

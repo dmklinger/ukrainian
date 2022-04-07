@@ -16,7 +16,9 @@ except:  # does not exist yet
 
 cyrillic = "ЄІЇАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюяєії"
 
-def get_ontolex():
+def get_ontolex(use_cache=True):
+	if use_cache and os.exists('data/raw_dbnary_dump.ttl'):
+		return
 	session = requests.session()
 	print('downloading latest ontolex data from dbnary')
 	with session.get('http://kaiko.getalp.org/static/ontolex/latest/en_dbnary_ontolex.ttl.bz2', stream=True) as f:
@@ -80,36 +82,43 @@ def get_wiktionary_word(word, use_cache=True):
 		results.append(w)
 	return results
 
+
 def dump_wiktionary_cache():
 	with open(f'data/wiktionary_raw_data.json', 'w+', encoding='utf-8') as f:
 		f.write(json.dumps(wiktionary_cache, ensure_ascii=False))
 
+
 def get_frequency_list():
-	parts_of_speech = {
-		'': None, 
-		'абревіатура': 'abbreviation', 
-		'вигук': 'interjection', 
-		'дієсл.': 'verb', 
-		'займ.': 'pronoun',  # inflected
-		'займ.-прикм.': 'pronoun',  # impersonal
-		'займ.-ім.': 'pronoun',  # personal
-		'прийм.': 'preposition', 
-		'прикметник': 'adjective', 
-		'прислівн.': 'adverb', 
-		'присудкова форма': 'predicate', 
-		'сполучн.': 'conjugation', 
-		'форма на -но/-то': None,  # unclear 
-		'част.': 'particle', 
-		'числ.': 'numeral', 
-		'ім. ж. р.': 'noun',  # female
-		'ім. множ.': 'noun',  # plural
-		'ім. с. р.': 'noun',  # neuter
-		'ім. ч. р.': 'noun',  # male
-	}
-	session = requests.session()
-	with session.get('http://ukrkniga.org.ua/ukr_rate/hproz_92k_lex_dict_orig.csv', stream=True) as f:
-		f.encoding = 'utf-8'
-		data = [row.split(';')[0:3] for row in f.text.split('\n')[1:-1]]
-	data = [{'rank': x[0], 'word': x[1], 'pos': parts_of_speech[x[2]]} for x in data]
-	with open(f'data/frequencies.json', 'w+', encoding='utf-8') as f:
-		f.write(json.dumps(data, indent=2, ensure_ascii=False))
+	try:
+		with open('data/frequencies.json', 'r', encoding='utf-8') as f:
+			data = json.loads(f.read())
+	except:  # does not exist yet	
+		parts_of_speech = {
+			'': None, 
+			'абревіатура': 'abbreviation', 
+			'вигук': 'interjection', 
+			'дієсл.': 'verb', 
+			'займ.': 'pronoun',  # inflected
+			'займ.-прикм.': 'pronoun',  # impersonal
+			'займ.-ім.': 'pronoun',  # personal
+			'прийм.': 'preposition', 
+			'прикметник': 'adjective', 
+			'прислівн.': 'adverb', 
+			'присудкова форма': 'predicate', 
+			'сполучн.': 'conjugation', 
+			'форма на -но/-то': None,  # unclear 
+			'част.': 'particle', 
+			'числ.': 'numeral', 
+			'ім. ж. р.': 'noun',  # female
+			'ім. множ.': 'noun',  # plural
+			'ім. с. р.': 'noun',  # neuter
+			'ім. ч. р.': 'noun',  # male
+		}
+		session = requests.session()
+		with session.get('http://ukrkniga.org.ua/ukr_rate/hproz_92k_lex_dict_orig.csv', stream=True) as f:
+			f.encoding = 'utf-8'
+			data = [row.split(';')[0:3] for row in f.text.split('\n')[1:-1]]
+		data = [{'rank': x[0], 'word': x[1], 'pos': parts_of_speech[x[2]]} for x in data]
+		with open(f'data/frequencies.json', 'w+', encoding='utf-8') as f:
+			f.write(json.dumps(data, indent=2, ensure_ascii=False))
+	return data

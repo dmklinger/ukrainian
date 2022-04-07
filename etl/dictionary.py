@@ -133,7 +133,8 @@ class Dictionary:
 		n = len(words)
 		try:
 			for i, w in enumerate(words):
-				print(f"{i} of {n}: {w}")
+				if i % 100 == 0:
+					print(f"{i // 100} of {n // 100}")
 				result = extract.get_wiktionary_word(w)
 				for r in result:
 					self.add_to_dictionary(r)
