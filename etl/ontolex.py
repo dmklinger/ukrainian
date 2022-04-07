@@ -25,7 +25,8 @@ class Ontolex_Word:
 
 	def add_translation(self, gloss, translation):
 		if translation.endswith(' f') or translation.endswith(' m'):
-			translation = translation[:-3]
+			translation = translation.replace(' f', '(female form)')
+			translation = translation.replace(' m', '(male form)')
 		self.data[gloss]['translation'].append(translation)
 	
 	def add_definition(self, gloss, definition):

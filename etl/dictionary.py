@@ -1,6 +1,8 @@
 import json
 from collections import defaultdict
 
+import extract
+
 class Usage:
 
 	def __init__(self, word, pos):
@@ -30,6 +32,8 @@ class Usage:
 class Word:
 
 	def __init__(self, word):
+		if word == "будова (bud'''o'''wa)":
+			word = 'будова'
 		self.word = word
 		self.usages = {}
 
@@ -37,6 +41,23 @@ class Word:
 		return self.word.replace("́", "")
 
 	def add_definition(self, pos, definition):
+		replace = {
+			'conjunction': 'particle',
+			'determiner': 'particle',
+			'interjection': 'particle',
+			'letter': 'noun',
+			'number': 'numeral',
+			'numeral': 'numeral',
+			'postposition': 'particle',
+			'predicative': 'particle',
+			'preposition': 'particle',
+			'prepositional phrase': 'phrase',
+			'proper noun': 'noun',
+		}
+		if pos in replace:
+			if pos not in definition:
+				definition = f"{definition} ({pos})"
+			pos = replace[pos]
 		if pos in self.usages:
 			u = self.usages[pos]
 		else:
@@ -97,13 +118,25 @@ class Dictionary:
 				self.dict[to_add.word] = to_add		
 				self.accentless_words[no_accent].add(to_add.word)
 
-
 	def add_to_dictionary(self, to_add):
 		if isinstance(to_add, Word):
 			self._add_word_to_dictionary(to_add)
 		if isinstance(to_add, list):
 			for w in to_add:
 				self._add_word_to_dictionary(w)
+
+	def add_wiktionary_words(self):
+		print("adding wiktionary words")
+		print('extracting lemmas')
+		words = extract.get_lemmas()
+		print('done extracting lemmas')
+		n = len(words)
+		for i, w in enumerate(words):
+			print(f"{i} of {n}: {w}")
+			result = extract.get_wiktionary_word(w)
+			for r in result:
+				self.add_to_dictionary(r)
+
 
 	def get_dict(self):
 		dict = {}
