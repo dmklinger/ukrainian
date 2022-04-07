@@ -1,7 +1,11 @@
 import json
 from collections import defaultdict
+import re
 
 import extract
+
+cyrillic = "ЄІЇАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюяєії"
+
 
 class Usage:
 
@@ -9,13 +13,37 @@ class Usage:
 		self.word = word
 		self.pos = pos
 		self.definitions = {}
+		self.alerted_definitions = {}
 
 	def add_definitions(self, definitions):
 		for d in definitions:
 			self.add_definition(d)
 
-	def add_definition(self, definition):
+	def add_definition(self, definition, alert=False):
 		self.definitions[definition] = None
+		if alert:
+			self.alerted_definitions[definition] = None
+		# check to ensure definitions are not redundant
+		bad_defs = set()
+		for d1 in self.definitions.keys():
+			for d2 in self.definitions.keys():
+				if d1 != d2 and d1 in d2:
+					bad_defs.add(d1)
+		for d in bad_defs:
+			del self.definitions[d]
+			if d in self.alerted_definitions:
+				del self.alerted_definitions[d]
+
+	def get_alerted_words(self):
+		for d in self.alerted_definitions.keys():
+			initial_index = None
+			for i, x in enumerate(d):
+				if x in cyrillic + ' ' + "'":
+					found_word = found_word + x
+				if x in cyrillic + "'" and initial_index is None:
+					initial_index = i
+			found_word = found_word.strip()
+			match = re.search('“(.*)”', d)
 
 	def get_definitions(self):
 		return list(self.definitions)
@@ -40,7 +68,7 @@ class Word:
 	def get_word_no_accent(self):
 		return self.word.replace("́", "")
 
-	def add_definition(self, pos, definition):
+	def add_definition(self, pos, definition, alert=False):
 		replace = {
 			'conjunction': 'particle',
 			'determiner': 'particle',
@@ -63,7 +91,7 @@ class Word:
 		else:
 			u = Usage(self.word, pos)
 			self.usages[pos] = u
-		u.add_definition(definition)
+		u.add_definition(definition, alert=alert)
 
 	def merge(self, other):
 		for pos, usage in other.usages.items():
@@ -71,6 +99,13 @@ class Word:
 				self.usages[pos].merge(usage)
 			else:
 				self.usages[pos] = usage
+
+	def get_alerted_words(self):
+		problems = []
+		for pos, usage in self.usages.items():
+			words = usage.get_alerted_words()
+			problems.append((pos, words))
+		return problems
 
 	def get_dict(self):
 		dict = {}
@@ -140,7 +175,12 @@ class Dictionary:
 					self.add_to_dictionary(r)
 		finally:
 			extract.dump_wiktionary_cache()
+		print('cleaning words that are defined in reference to another')
+		self.clean_alerted_words()
 
+	def clean_alerted_words(self):
+		for _, w in self.dict.items():
+			problems = w.get_alerted_words()
 
 	def get_dict(self):
 		dict = {}

@@ -78,8 +78,21 @@ def get_wiktionary_word(word, use_cache=True):
 		for d in ds:
 			if d.dl:
 				d.dl.decompose()
-			w.add_definition(pos, d.text.strip())
-		results.append(w)
+			d = d.text.strip()
+			if '[1]' in d:
+				d = d.replace('[1]', '')
+			elif d.endswith(']'):
+				d = d[:-1]
+			if 'This term needs a translation to English. Please help out and add a translation, then remove the text' in d:
+				None  # No
+			else:
+				if ' of ' in d and d.split(' of ')[1][0] in cyrillic:
+					if ':' in d or ';' in d:
+						w.add_definition(pos, d, alert=True)
+				else:
+					w.add_definition(pos, d)
+		if len(w.usages.keys()) > 0:
+			results.append(w)
 	return results
 
 
