@@ -131,11 +131,14 @@ class Dictionary:
 		words = extract.get_lemmas()
 		print('done extracting lemmas')
 		n = len(words)
-		for i, w in enumerate(words):
-			print(f"{i} of {n}: {w}")
-			result = extract.get_wiktionary_word(w)
-			for r in result:
-				self.add_to_dictionary(r)
+		try:
+			for i, w in enumerate(words):
+				print(f"{i} of {n}: {w}")
+				result = extract.get_wiktionary_word(w)
+				for r in result:
+					self.add_to_dictionary(r)
+		finally:
+			extract.dump_wiktionary_cache()
 
 
 	def get_dict(self):

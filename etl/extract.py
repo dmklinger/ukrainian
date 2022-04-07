@@ -8,6 +8,12 @@ from dictionary import Word
 
 os.makedirs('data', exist_ok=True)
 
+try:
+	with open('data/wiktionary_raw_data.json', 'r', encoding='utf-8') as f:
+		wiktionary_cache = json.loads(f.read())
+except:  # does not exist yet
+	wiktionary_cache = {}
+
 cyrillic = "ЄІЇАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюяєії"
 
 def get_ontolex():
@@ -43,11 +49,15 @@ def get_lemmas():
 	return words
 
 
-def get_wiktionary_word(word):
+def get_wiktionary_word(word, use_cache=True):
 	session = requests.session()
-	article = session.get(
-		f'https://en.wiktionary.org/w/api.php?action=parse&page={word}&prop=text&formatversion=2&format=json'
-	).json()['parse']['text']
+	if word in wiktionary_cache and use_cache:
+		article = wiktionary_cache[word]
+	else:
+		article = session.get(
+			f'https://en.wiktionary.org/w/api.php?action=parse&page={word}&prop=text&formatversion=2&format=json'
+		).json()['parse']['text']
+		wiktionary_cache[word] = article
 	article = BeautifulSoup(article, 'lxml')
 
 	results = []
@@ -66,10 +76,13 @@ def get_wiktionary_word(word):
 		for d in ds:
 			if d.dl:
 				d.dl.decompose()
-			w.add_definition(pos, d)
+			w.add_definition(pos, d.text.strip())
 		results.append(w)
 	return results
 
+def dump_wiktionary_cache():
+	with open(f'data/wiktionary_raw_data.json', 'w+', encoding='utf-8') as f:
+		f.write(json.dumps(wiktionary_cache, ensure_ascii=False))
 
 def get_frequency_list():
 	parts_of_speech = {
