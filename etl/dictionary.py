@@ -27,7 +27,7 @@ class Usage:
 		bad_defs = set()
 		for d1 in self.definitions.keys():
 			for d2 in self.definitions.keys():
-				if d1 != d2 and d1 in d2:
+				if d1 != d2 and d1.lower() in d2.lower():
 					bad_defs.add(d1)
 		for d in bad_defs:
 			del self.definitions[d]
@@ -35,6 +35,7 @@ class Usage:
 				del self.alerted_definitions[d]
 
 	def get_alerted_words(self):
+		result_set = set()
 		for d in self.alerted_definitions.keys():
 			initial_index = None
 			found_word = ''
@@ -44,6 +45,20 @@ class Usage:
 				if x in cyrillic + "'" and initial_index is None:
 					initial_index = i
 			found_word = found_word.strip()
+			acceptable_forms = [
+				'alternative', 
+				'contraction', 
+				'synonym', 
+				'diminutive', 
+				'initialism', 
+				'endearing',
+				'augmentative',
+				'variant',
+				'comparative',
+			]
+			for af in acceptable_forms:
+				if af in d.lower():
+					print(d)
 
 	def get_definitions(self):
 		return list(self.definitions)
@@ -69,6 +84,8 @@ class Word:
 		return self.word.replace("́", "")
 
 	def add_definition(self, pos, definition):
+		if pos == 'verb' and len(definition.split()) == 1:
+			definition = f"to {definition}"
 		replace = {
 			'conjunction': 'particle',
 			'determiner': 'particle',
@@ -90,12 +107,13 @@ class Word:
 			definition = definition.replace('[1]', '')
 		elif definition.endswith(']') and '[' not in definition:
 			definition = definition[:-1]
-		for x, y in [('(2)', ''), ('“', '"'), ('”', '"'), (r'{{', ''), (r'}}', '')]:
+		for x, y in [('“', '"'), ('”', '"'), (r'{{', ''), (r'}}', ''), ('()', ''), ('\u200b', '')]:
 			if x in definition:
 				definition = definition.replace(x, y)
-		if definition == 'This term needs a translation to English. Please help out and add a translation, then remove the text':
+		definition = ' '.join(definition.split())
+		if 'This term needs a translation to English. Please help out and add a translation, then remove the text' in definition:
 			return  # No
-		if definition == 'This term needs a translation to English. Please help out and add a translation, then remove the text rfdef.':
+		if 'This term needs a translation to English. Please help out and add a translation, then remove the text rfdef.' in definition:
 			return # No
 
 		if pos in self.usages:
@@ -119,11 +137,8 @@ class Word:
 				self.usages[pos] = usage
 
 	def get_alerted_words(self):
-		problems = []
 		for pos, usage in self.usages.items():
 			words = usage.get_alerted_words()
-			problems.append((pos, words))
-		return problems
 
 	def get_dict(self):
 		dict = {}
@@ -193,6 +208,8 @@ class Dictionary:
 				result = extract.get_wiktionary_word(w)
 				for r in result:
 					self.add_to_dictionary(r)
+		except Exception as e:
+			raise e
 		finally:
 			extract.dump_wiktionary_cache()
 		print('cleaning words that are defined in reference to another')
@@ -200,7 +217,7 @@ class Dictionary:
 
 	def clean_alerted_words(self):
 		for _, w in self.dict.items():
-			problems = w.get_alerted_words()
+			w.get_alerted_words()
 
 	def get_dict(self):
 		dict = {}
