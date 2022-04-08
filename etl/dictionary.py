@@ -14,6 +14,7 @@ class Usage:
 		self.definitions = {}
 		self.alerted_definitions = {}
 		self.frequency = None
+		self.forms = {}
 
 	def add_definitions(self, definitions):
 		for d in definitions:
@@ -81,6 +82,9 @@ class Usage:
 	def add_frequency(self, frequency):
 		self.frequency = frequency
 
+	def add_forms(self, forms):
+		self.forms = forms
+
 	def get_definitions(self, accept_alerts=True):
 		result = []
 		for d, pov in self.definitions.items():
@@ -106,11 +110,14 @@ class Usage:
 				new_usage.add_definition(d, alert=d in other.alerted_definitions)
 		self.definitions = new_usage.definitions
 		self.alerted_definitions = new_usage.alerted_definitions
+		if len(self.forms.keys()) == 0 and len(other.forms.keys()) > 0:
+			self.forms = other.forms
 
 	def get_dict(self):
 		return {
 			'defs': self.get_definitions(),
-			'freq': self.frequency
+			'freq': self.frequency,
+			'forms': self.forms
 		}
 
 
@@ -211,6 +218,9 @@ class Word:
 					usage.add_frequency(None)
 			else:
 				usage.add_frequency(None)
+		
+	def add_forms(self, pos, forms):
+		self.usages[pos].add_forms(forms)
 
 	def get_dict(self):
 		dict = {}
