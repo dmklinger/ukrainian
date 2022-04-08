@@ -1,6 +1,4 @@
 from ontolex import Ontolex
-import extract
-import dictionary
 
 o = Ontolex(use_cache=True, use_raw_cache=True)
 d = o.get_dictionary()

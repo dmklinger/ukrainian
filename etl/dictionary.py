@@ -58,7 +58,8 @@ class Usage:
 				'acronym',
 				'equivalent',
 				'abbreviation',
-				'dialectical'
+				'dialectical',
+				'('
 			]
 			if sum([1 if af in d.lower() else 0 for af in acceptable_forms]) > 0:
 				matched_word = None
@@ -74,7 +75,6 @@ class Usage:
 					del self.definitions[d]
 					del self.alerted_definitions[d]
 			else:
-				print(f"deleting: {d}")
 				del self.definitions[d]
 				del self.alerted_definitions[d]
 
@@ -89,9 +89,18 @@ class Usage:
 
 	def merge(self, other, accept_alerts=True):
 		new_usage = Usage(self.word, self.pos)
+		these_definitions = self.get_definitions()
+		other_definitions = other.get_definitions()
+		min_length = min(len(these_definitions), len(other_definitions))
 		for pair in zip(self.get_definitions(), other.get_definitions(accept_alerts)):
 			new_usage.add_definition(pair[0], alert=pair[0] in self.alerted_definitions)
 			new_usage.add_definition(pair[1], alert=pair[1] in other.alerted_definitions)
+		if len(these_definitions) > len(other_definitions):
+			for d in these_definitions[(len(these_definitions) - min_length):]:
+				new_usage.add_definition(d, alert=d in self.alerted_definitions)
+		elif len(other_definitions) > len(these_definitions):
+			for d in other_definitions[(len(other_definitions) - min_length):]:
+				new_usage.add_definition(d, alert=d in other.alerted_definitions)
 		self.definitions = new_usage.definitions
 		self.alerted_definitions = new_usage.alerted_definitions
 
