@@ -152,6 +152,12 @@ class Word:
 		for _, usage in self.usages.items():
 			usage.clean_alerted_words(dictionary)
 
+	def garbage_collect(self):
+		for pos in list(self.usages.keys()):
+			usage = self.usages[pos]
+			if len(usage.definitions.keys()) == 0:
+				del self.usages[pos]
+
 	def get_dict(self):
 		dict = {}
 		for k, v in self.usages.items():
@@ -224,10 +230,18 @@ class Dictionary:
 			extract.dump_wiktionary_cache()
 		print('cleaning words that are defined in reference to another')
 		self.clean_alerted_words()
+		self.garbage_collect()
 
 	def clean_alerted_words(self):
 		for _, w in self.dict.items():
 			w.clean_alerted_words(self)
+
+	def garbage_collect(self):
+		for w in list(self.dict.keys()):
+			word = self.dict[w]
+			word.garbage_collect()
+			if len(word.usages.keys()) == 0:
+				del self.dict[w]
 
 	def get_dict(self):
 		dict = {}
