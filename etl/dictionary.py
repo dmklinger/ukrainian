@@ -1,6 +1,5 @@
 import json
 from collections import defaultdict
-import re
 
 import extract
 
@@ -14,6 +13,7 @@ class Usage:
 		self.pos = pos
 		self.definitions = {}
 		self.alerted_definitions = {}
+		self.frequency = None
 
 	def add_definitions(self, definitions):
 		for d in definitions:
@@ -77,6 +77,9 @@ class Usage:
 			else:
 				del self.definitions[d]
 				del self.alerted_definitions[d]
+	
+	def add_frequency(self, frequency):
+		self.frequency = frequency
 
 	def get_definitions(self, accept_alerts=True):
 		result = []
@@ -105,7 +108,10 @@ class Usage:
 		self.alerted_definitions = new_usage.alerted_definitions
 
 	def get_dict(self):
-		return self.get_definitions()
+		return {
+			'defs': self.get_definitions(),
+			'freq': self.frequency
+		}
 
 
 class Word:
@@ -139,7 +145,19 @@ class Word:
 			definition = definition.replace('[1]', '')
 		elif definition.endswith(']') and '[' not in definition:
 			definition = definition[:-1]
-		for x, y in [('“', '"'), ('”', '"'), (r'{{', ''), (r'}}', ''), ('()', ''), ('\u200b', ''), (' :', ':')]:
+		for x, y in [
+				('“', '"'), 
+				('”', '"'), 
+				(r'{{', ''), 
+				(r'}}', ''), 
+				('()', ''), 
+				('\u200b', ''), 
+				(' :', ':'), 
+				('’', "'"),
+				(',:', ':'),
+				('\\', ''),
+				(',)', ')')
+			]:
 			if x in definition:
 				definition = definition.replace(x, y)
 		definition = ' '.join(definition.split())
@@ -183,6 +201,16 @@ class Word:
 			usage = self.usages[pos]
 			if len(usage.definitions.keys()) == 0:
 				del self.usages[pos]
+
+	def add_frequencies(self, frequencies):
+		for pos, usage in self.usages.items():
+			if frequencies:
+				if pos in frequencies:
+					usage.add_frequency(frequencies[pos])
+				else:
+					usage.add_frequency(None)
+			else:
+				usage.add_frequency(None)
 
 	def get_dict(self):
 		dict = {}
@@ -256,6 +284,7 @@ class Dictionary:
 			extract.dump_wiktionary_cache()
 		self.clean_alerted_words()
 		self.garbage_collect()
+		self.add_frequencies()
 
 	def clean_alerted_words(self):
 		for _, w in self.dict.items():
@@ -267,6 +296,14 @@ class Dictionary:
 			word.garbage_collect()
 			if len(word.usages.keys()) == 0:
 				del self.dict[w]
+
+	def add_frequencies(self):
+		frequencies = extract.get_frequency_list()
+		for _, word in self.dict.items():
+			if word.get_word_no_accent() in frequencies:
+				word.add_frequencies(frequencies[word.get_word_no_accent()])
+			else:
+				word.add_frequencies(None)
 
 	def get_dict(self):
 		dict = {}

@@ -44,7 +44,7 @@ class Ontolex_Word:
 				if not definition:
 					definition = self.word
 				if self.word not in definition:
-					w.add_definition(pos, f"{self.word}, {definition}")
+					w.add_definition(pos, f"{self.word} ({definition})")
 				else:
 					w.add_definition(pos, definition)
 				results.append(w)
@@ -85,7 +85,7 @@ class Ontolex:
 		for i, line in enumerate(data):
 			if i % divisor == 0:
 				print(f"{i // divisor} of {n // divisor}")
-			if 'eng:__en_gloss' in line:
+			if 'eng:__en_gloss' in line or 'eng/__en_gloss' in line:
 				gloss = line.split(';')[0].split('>')[0].split('/')[-1].split('.')[0].split(':')[-1].strip()
 				vals = [x.replace('_', ' ').strip() for x in '_'.join(gloss.split('_')[5:]).split('__')]
 				word = vals[0]

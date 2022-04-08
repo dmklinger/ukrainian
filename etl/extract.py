@@ -2,6 +2,7 @@ import bz2
 import os
 import requests
 import json
+from collections import defaultdict
 from bs4 import BeautifulSoup, NavigableString
 
 from dictionary import Word
@@ -95,7 +96,9 @@ def get_wiktionary_word(word, use_cache=True):
 			+ def_pointer.find_all(class_='mention-gloss-paren annotation-paren') \
 			+ def_pointer.find_all(class_='mention-gloss-double-quote') \
 			+ def_pointer.find_all(class_='nyms synonym') \
-			+ def_pointer.find_all(class_='reference')
+			+ def_pointer.find_all(class_='reference') \
+			+ def_pointer.find_all(class_='citation-whole') \
+			+ def_pointer.find_all(class_='plainlinks')
 		for bs in bad_stuff:
 			bs.decompose()
 		for d in ds:	
@@ -151,10 +154,16 @@ def get_frequency_list():
 			'ім. ч. р.': 'noun',  # male
 		}
 		session = requests.session()
+		frequency_dict = defaultdict(lambda: {})
 		with session.get('http://ukrkniga.org.ua/ukr_rate/hproz_92k_lex_dict_orig.csv', stream=True) as f:
 			f.encoding = 'utf-8'
 			data = [row.split(';')[0:3] for row in f.text.split('\n')[1:-1]]
-		data = [{'rank': x[0], 'word': x[1], 'pos': parts_of_speech[x[2]]} for x in data]
+		for x in data:
+			frequency_dict[
+				x[1]  # word
+			][
+				parts_of_speech[x[2]]  # part of speech
+			] = x[0]  # rank
 		with open(f'data/frequencies.json', 'w+', encoding='utf-8') as f:
-			f.write(json.dumps(data, indent=2, ensure_ascii=False))
+			f.write(json.dumps(frequency_dict, indent=2, ensure_ascii=False))
 	return data
