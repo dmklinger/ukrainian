@@ -44,7 +44,7 @@ class Ontolex_Word:
 				if not definition:
 					definition = self.word
 				if self.word not in definition:
-					w.add_definition(pos, self.word)
+					w.add_definition(pos, f"{self.word}, {definition}")
 				else:
 					w.add_definition(pos, definition)
 				results.append(w)

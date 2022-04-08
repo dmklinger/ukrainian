@@ -88,9 +88,12 @@ class Usage:
 		return result
 
 	def merge(self, other, accept_alerts=True):
-		self.add_definitions(
-			[item for pair in zip(self.get_definitions(), other.get_definitions(accept_alerts)) for item in pair]
-		)
+		new_usage = Usage(self.word, self.pos)
+		for pair in zip(self.get_definitions(), other.get_definitions(accept_alerts)):
+			new_usage.add_definition(pair[0], alert=pair[0] in self.alerted_definitions)
+			new_usage.add_definition(pair[1], alert=pair[1] in other.alerted_definitions)
+		self.definitions = new_usage.definitions
+		self.alerted_definitions = new_usage.alerted_definitions
 
 	def get_dict(self):
 		return self.get_definitions()
