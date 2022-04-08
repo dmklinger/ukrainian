@@ -20,9 +20,9 @@ class Usage:
 			self.add_definition(d)
 
 	def add_definition(self, definition, alert=False):
-		self.definitions[definition] = None
 		if alert:
 			self.alerted_definitions[definition] = None
+		self.definitions[definition] = None
 		# check to ensure definitions are not redundant
 		bad_defs = set()
 		for d1 in self.definitions.keys():
@@ -34,15 +34,14 @@ class Usage:
 			if d in self.alerted_definitions:
 				del self.alerted_definitions[d]
 
-	def get_alerted_words(self):
-		result_set = set()
-		for d in self.alerted_definitions.keys():
+	def clean_alerted_words(self, dictionary):
+		for d in list(self.alerted_definitions.keys()):
 			initial_index = None
 			found_word = ''
 			for i, x in enumerate(d):
-				if x in cyrillic + ' ' + "'":
+				if x in cyrillic + ' ' + "'" + "́":
 					found_word = found_word + x
-				if x in cyrillic + "'" and initial_index is None:
+				if x in cyrillic + "'" + "́" and initial_index is None:
 					initial_index = i
 			found_word = found_word.strip()
 			acceptable_forms = [
@@ -56,9 +55,22 @@ class Usage:
 				'variant',
 				'comparative',
 			]
-			for af in acceptable_forms:
-				if af in d.lower():
-					print(d)
+			if sum([1 if af in d.lower() else 0 for af in acceptable_forms]) > 0:
+				matched_word = None
+				if found_word in dictionary.dict:
+					matched_word = dictionary.dict[found_word]
+				elif found_word.replace("́", '') in dictionary.dict:
+					matched_word = dictionary.dict[found_word.replace("́", '')]
+				if matched_word:
+					if self.pos in matched_word.usages:
+						self.merge(matched_word.usages[self.pos])
+					self.add_definition(d)
+				elif len(self.definitions.keys()) == len(self.alerted_definitions.keys()):
+					del self.definitions[d]
+					del self.alerted_definitions[d]
+			else:
+				del self.definitions[d]
+				del self.alerted_definitions[d]
 
 	def get_definitions(self):
 		return list(self.definitions)
@@ -107,7 +119,7 @@ class Word:
 			definition = definition.replace('[1]', '')
 		elif definition.endswith(']') and '[' not in definition:
 			definition = definition[:-1]
-		for x, y in [('“', '"'), ('”', '"'), (r'{{', ''), (r'}}', ''), ('()', ''), ('\u200b', '')]:
+		for x, y in [('“', '"'), ('”', '"'), (r'{{', ''), (r'}}', ''), ('()', ''), ('\u200b', ''), (' :', ':')]:
 			if x in definition:
 				definition = definition.replace(x, y)
 		definition = ' '.join(definition.split())
@@ -136,9 +148,9 @@ class Word:
 			else:
 				self.usages[pos] = usage
 
-	def get_alerted_words(self):
-		for pos, usage in self.usages.items():
-			words = usage.get_alerted_words()
+	def clean_alerted_words(self, dictionary):
+		for _, usage in self.usages.items():
+			usage.clean_alerted_words(dictionary)
 
 	def get_dict(self):
 		dict = {}
@@ -176,8 +188,6 @@ class Dictionary:
 				self.dict[to_add.word] = to_add
 
 	def _add_word_to_dictionary(self, to_add):
-		if len(to_add.usages.keys()) == 0:
-			return
 		if to_add.word in self.dict:
 			self.dict[to_add.word].merge(to_add)
 		else:
@@ -217,7 +227,7 @@ class Dictionary:
 
 	def clean_alerted_words(self):
 		for _, w in self.dict.items():
-			w.get_alerted_words()
+			w.clean_alerted_words(self)
 
 	def get_dict(self):
 		dict = {}

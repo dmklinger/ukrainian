@@ -76,7 +76,10 @@ def get_wiktionary_word(word, use_cache=True):
 
 	word_name = article.find_all('strong', {'class': 'Cyrl headword'}, lang='uk')
 	for word_pointer in word_name:
-		accented_name = word_pointer.text  # name
+		bad_stuff = word_pointer.find_all(class_='reference')
+		for bs in bad_stuff:
+			bs.decompose()
+		accented_name = word_pointer.text.strip()  # name
 		w = Word(accented_name)
 		pos_pointer = word_pointer.find_previous(['h3', 'h4'])
 		pos = pos_pointer.span.text.lower()
@@ -100,6 +103,8 @@ def get_wiktionary_word(word, use_cache=True):
 			d = d.strip()
 			d = d.replace(' ,', ',')
 			d = d.replace(' .', '.')
+			d = d.replace(',:', ':')
+			d = d.replace(' :', ':')
 			d = d.replace(' :', ':')
 			d = ' '.join(d.split()).rstrip(',.:').strip()
 			w.add_definition(pos, d)
