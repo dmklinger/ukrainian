@@ -69,7 +69,7 @@ class Ontolex:
 				pass
 		extract.get_ontolex(use_cache=use_raw_cache)
 		self.parse_ontolex()
-		self.dump('ontolex_data.json')
+		self.dump('ontolex_data.json', indent=2)
 
 	def get_word(self, word):
 		if word not in self.words:

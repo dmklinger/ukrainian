@@ -19,10 +19,10 @@ class Usage:
 		for d in definitions:
 			self.add_definition(d)
 
-	def add_definition(self, definition, alert=False):
+	def add_definition(self, definition, replaced=None, alert=False):
 		if alert:
-			self.alerted_definitions[definition] = None
-		self.definitions[definition] = None
+			self.alerted_definitions[definition] = replaced
+		self.definitions[definition] = replaced
 		# check to ensure definitions are not redundant
 		bad_defs = set()
 		for d1 in self.definitions.keys():
@@ -54,6 +54,11 @@ class Usage:
 				'augmentative',
 				'variant',
 				'comparative',
+				'verbal',
+				'acronym',
+				'equivalent',
+				'abbreviation',
+				'dialectical'
 			]
 			if sum([1 if af in d.lower() else 0 for af in acceptable_forms]) > 0:
 				matched_word = None
@@ -63,21 +68,28 @@ class Usage:
 					matched_word = dictionary.dict[found_word.replace("́", '')]
 				if matched_word:
 					if self.pos in matched_word.usages:
-						self.merge(matched_word.usages[self.pos])
+						self.merge(matched_word.usages[self.pos], accept_alerts=False)
 					self.add_definition(d)
 				elif len(self.definitions.keys()) == len(self.alerted_definitions.keys()):
 					del self.definitions[d]
 					del self.alerted_definitions[d]
 			else:
+				print(f"deleting: {d}")
 				del self.definitions[d]
 				del self.alerted_definitions[d]
 
-	def get_definitions(self):
-		return list(self.definitions)
+	def get_definitions(self, accept_alerts=True):
+		result = []
+		for d, pov in self.definitions.items():
+			if pov and pov not in d:
+				d = f"{d} ({pov})"
+			if accept_alerts or d not in self.alerted_definitions:
+				result.append(d)
+		return result
 
-	def merge(self, other):
+	def merge(self, other, accept_alerts=True):
 		self.add_definitions(
-			[item for pair in zip(self.get_definitions(), other.get_definitions()) for item in pair]
+			[item for pair in zip(self.get_definitions(), other.get_definitions(accept_alerts)) for item in pair]
 		)
 
 	def get_dict(self):
@@ -96,8 +108,6 @@ class Word:
 		return self.word.replace("́", "")
 
 	def add_definition(self, pos, definition):
-		if pos == 'verb' and len(definition.split()) == 1:
-			definition = f"to {definition}"
 		replace = {
 			'conjunction': 'particle',
 			'determiner': 'particle',
@@ -111,10 +121,8 @@ class Word:
 			'prepositional phrase': 'phrase',
 			'proper noun': 'noun',
 		}
-		if pos in replace:
-			if pos not in definition:
-				definition = f"{definition} ({pos})"
-			pos = replace[pos]
+		if pos == 'verb' and len(definition.split()) == 1:
+			definition = f"to {definition}"
 		if '[1]' in definition:
 			definition = definition.replace('[1]', '')
 		elif definition.endswith(']') and '[' not in definition:
@@ -128,6 +136,12 @@ class Word:
 		if 'This term needs a translation to English. Please help out and add a translation, then remove the text rfdef.' in definition:
 			return # No
 
+		replaced = None
+
+		if pos in replace:
+			replaced = pos
+			pos = replace[pos]
+
 		if pos in self.usages:
 			u = self.usages[pos]
 		else:
@@ -135,11 +149,11 @@ class Word:
 			self.usages[pos] = u
 		if ' of ' in definition and definition.split(' of ')[1][0] in cyrillic:
 			if ':' in definition or ';' in definition:
-				u.add_definition(definition, alert=False)
+				u.add_definition(definition, replaced=replaced, alert=False)
 			else:
-				u.add_definition(definition, alert=True)
+				u.add_definition(definition, replaced=replaced, alert=True)
 		else:
-			u.add_definition(definition, alert=False)
+			u.add_definition(definition, replaced=replaced, alert=False)
 
 	def merge(self, other):
 		for pos, usage in other.usages.items():
@@ -228,7 +242,6 @@ class Dictionary:
 			raise e
 		finally:
 			extract.dump_wiktionary_cache()
-		print('cleaning words that are defined in reference to another')
 		self.clean_alerted_words()
 		self.garbage_collect()
 

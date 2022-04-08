@@ -68,6 +68,10 @@ def get_wiktionary_word(word, use_cache=True):
 				res += str(child)
 			elif child.name in ('sup', 'sub'):
 				res += str(child)
+			elif child.name in ('ol', 'ul'):
+				None  # in this house we say NO to recursion
+			elif child.name in ('li'):
+				res += clean_tag(child) + ','
 			else:
 				res += clean_tag(child)
 		return res
@@ -85,8 +89,7 @@ def get_wiktionary_word(word, use_cache=True):
 		pos = pos_pointer.span.text.lower()
 		def_pointer = word_pointer.find_next('ol')
 		ds = def_pointer.find_all('li')
-		bad_stuff = def_pointer.find_all('ul') \
-			+ def_pointer.find_all('span', class_='HQToggle') \
+		bad_stuff = def_pointer.find_all('span', class_='HQToggle') \
 			+ def_pointer.find_all('abbr') \
 			+ def_pointer.find_all(lang='uk-Latn') \
 			+ def_pointer.find_all(class_='mention-gloss-paren annotation-paren') \
@@ -95,19 +98,20 @@ def get_wiktionary_word(word, use_cache=True):
 			+ def_pointer.find_all(class_='reference')
 		for bs in bad_stuff:
 			bs.decompose()
-		for d in ds:
+		for d in ds:	
 			glosses = [g.extract().text.strip() for g in d.find_all(class_='mention-gloss')]
 			if d.dl:
 				d.dl.decompose()
 			d = clean_tag(d)
-			d = d.strip()
+			d = ' '.join(d.split())
 			d = d.replace(' ,', ',')
 			d = d.replace(' .', '.')
+			d = d.replace(' :', ':')
+			d = d.replace(' :', ':')
 			d = d.replace(',:', ':')
-			d = d.replace(' :', ':')
-			d = d.replace(' :', ':')
-			d = ' '.join(d.split()).rstrip(',.:').strip()
-			w.add_definition(pos, d)
+			d = d.rstrip(',.:').strip()
+			if len(d) > 0:
+				w.add_definition(pos, d)
 			if len(glosses) > 0:
 				for g in glosses:
 					w.add_definition(pos, g)
