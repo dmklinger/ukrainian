@@ -479,7 +479,7 @@ def get_inflection(word, use_cache=True):
 		'жіночого': 'female',
 		'з': 'with',
 		'займенник': 'pronoun',
-		'кількісний': 'determiner',
+		'кількісний': 'particle',
 		'множинний': 'plural',
 		'назва': 'noun',
 		'найвищий': 'lowest',
@@ -519,10 +519,10 @@ def get_inflection(word, use_cache=True):
 		found_word, word_info, forms = res
 		if found_word:
 			word_len = len(no_accent.split())
+			found_word = ' '.join(found_word.split()[:word_len])
 			forms = deepcopy(forms)
 			word_info = ''.join([x for x in word_info if x in cyrillic + "' "])
 			word_info = ' '.join([translations[x] for x in word_info.split()])
-			print(word_info)
 			
 			for form_id in list(forms.keys()):
 				form = forms[form_id]
@@ -536,6 +536,7 @@ def get_inflection(word, use_cache=True):
 		return res
 
 	results = [clean_result(x) for x in results]
+	return results
 
 
 def dump_inflection_cache():

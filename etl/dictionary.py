@@ -91,8 +91,52 @@ class Usage:
 		return list(self.info.keys())
 
 	def add_forms(self, forms):
-		if forms:
-			self.forms = forms
+		if forms: 
+			if self.forms:
+				for key in (self.forms.keys() | forms.keys()):
+					these_forms = []
+					other_forms = []
+					if key in self.forms:
+						these_forms = self.forms[key]
+					if key in forms:
+						other_forms = forms[key]
+					surplus = []
+					if len(these_forms) < len(other_forms):
+						surplus = other_forms[len(these_forms):]
+					elif len(these_forms) > len(other_forms):
+						surplus = these_forms[len(other_forms):]
+					self.forms[key] = [x for pair in zip(these_forms, other_forms) for x in pair] + surplus
+			else:
+				self.forms = forms
+
+	def add_inflection(self, results):
+
+		def get_inflection_positions(word):
+			word = word + '|'  # end of word marker, irrelevant
+			word_split = [(word[i], word[i+1]) for i in range(len(word) - 1) if word[i] != "́"]
+			result = set([i for i in range(len(word_split)) if word_split[i][1] == "́"])
+			return result
+
+		added_flag = False
+		for found_word, word_info, forms in results:
+			if found_word and self.pos and self.pos in word_info:  
+				if self.word == found_word: # perfect match!
+					self.add_info(word_info)
+					self.add_forms(forms)
+					added_flag = True
+				else:
+					this_inflection = get_inflection_positions(self.word) 
+					found_inflection = get_inflection_positions(found_word)
+					if len([x for x in this_inflection if x not in found_inflection]) == 0:  # stress could be elsewhere
+						self.add_info(word_info)
+						self.add_forms(forms)
+						added_flag = True
+		if not added_flag:
+			print(self.word)
+			print(self.pos)
+			print(results)
+			print('--------------------')
+		return added_flag
 
 	def get_definitions(self, accept_alerts=True):
 		result = []
@@ -235,6 +279,11 @@ class Word:
 	def add_forms(self, pos, forms):
 		self.usages[pos].add_forms(forms)
 
+	def add_inflections(self, results):
+		added_flag = False
+		for usage in self.usages.values():
+			added_flag = usage.add_inflection(results)
+
 	def get_dict(self):
 		dict = {}
 		for k, v in self.usages.items():
@@ -339,7 +388,8 @@ class Dictionary:
 				if i % 100 == 0:
 					print(f"{i} of {n}")
 				w = self.dict[word]
-				extract.get_inflection(w)
+				results = extract.get_inflection(w)
+				w.add_inflections(results)
 		except Exception as e:
 			raise e
 		finally:
