@@ -1,9 +1,16 @@
 import json
+from copy import deepcopy
 from collections import defaultdict
 
 import extract
 
 cyrillic = "ЄІЇАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюяєії"
+
+class Forms:
+	
+	def __init__(self, forms, form_type):
+		self.forms = forms
+		self.form_type = form_type
 
 
 class Usage:
@@ -16,6 +23,7 @@ class Usage:
 		self.frequency = None
 		self.forms = {}
 		self.info = {}
+		self.could_not_find_forms = False
 
 	def add_definitions(self, definitions):
 		for d in definitions:
@@ -109,7 +117,7 @@ class Usage:
 			else:
 				self.forms = forms
 
-	def add_inflection(self, results):
+	def add_inflection(self, results, force=False):
 
 		def get_inflection_positions(word):
 			word = word + '|'  # end of word marker, irrelevant
@@ -118,6 +126,7 @@ class Usage:
 			return result
 
 		added_flag = False
+		new_usages = []
 		for found_word, word_info, forms in results:
 			if found_word and self.pos and self.pos in word_info:  
 				if self.word == found_word: # perfect match!
@@ -128,15 +137,23 @@ class Usage:
 					this_inflection = get_inflection_positions(self.word) 
 					found_inflection = get_inflection_positions(found_word)
 					if len([x for x in this_inflection if x not in found_inflection]) == 0:  # stress could be elsewhere
-						self.add_info(word_info)
-						self.add_forms(forms)
+						new_usage = Usage(found_word, self.pos)
+						new_usage.definitions = deepcopy(self.definitions)
+						new_usage.alerted_definitions = deepcopy(self.alerted_definitions)
+						new_usage.add_info(word_info)
+						new_usage.add_forms(forms)
+						new_usages.append(new_usage)
 						added_flag = True
+			elif force:
+				if self.word == found_word:
+					self.add_info(word_info)
+					self.add_forms(forms)
 		if not added_flag:
 			print(self.word)
 			print(self.pos)
 			print(results)
 			print('--------------------')
-		return added_flag
+		return added_flag, new_usages
 
 	def get_definitions(self, accept_alerts=True):
 		result = []
@@ -281,8 +298,11 @@ class Word:
 
 	def add_inflections(self, results):
 		added_flag = False
+		new_usages = []
 		for usage in self.usages.values():
-			added_flag = usage.add_inflection(results)
+			added_flag, nu = usage.add_inflection(results)
+			new_usages += nu
+		return new_usages
 
 	def get_dict(self):
 		dict = {}
@@ -360,6 +380,7 @@ class Dictionary:
 		self.garbage_collect()
 		self.add_frequencies()
 		self.get_inflections()
+		self.garbage_collect()
 
 	def clean_alerted_words(self):
 		for _, w in self.dict.items():
@@ -384,12 +405,16 @@ class Dictionary:
 		print("getting inflections")
 		try:
 			n = len(self.dict.values())
-			for i, word in enumerate(self.dict.keys()):
+			for i, word in enumerate(list(self.dict.keys())):
 				if i % 100 == 0:
 					print(f"{i} of {n}")
 				w = self.dict[word]
 				results = extract.get_inflection(w)
-				w.add_inflections(results)
+				new_usages = w.add_inflections(results)
+				for n_u in new_usages:
+					new_w = Word(n_u.word)
+					new_w.usages[n_u.pos] = n_u
+					self.add_to_dictionary(new_w)
 		except Exception as e:
 			raise e
 		finally:
