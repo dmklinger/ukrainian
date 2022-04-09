@@ -152,8 +152,8 @@ def get_wiktionary_word(word, use_cache=True):
 		if table is None and inflection_pointer is not None:
 			table = inflection_pointer.find_next('table', {'class': 'inflection-table inflection inflection-uk inflection-verb'})
 		if table and len(w.usages.keys()) > 0:
-			forms = parse_wiktionary_table(accented_name, table) 
-			w.add_forms(list(w.usages.keys())[0], forms)
+			forms, form_type = parse_wiktionary_table(accented_name, table) 
+			w.add_forms(list(w.usages.keys())[0], forms, form_type)
 		results.append(w)
 	return results
 
@@ -208,7 +208,7 @@ def parse_wiktionary_table(w, inflections):
 					case_info = [None, None, None, None, None]
 				else:
 					case_info = case_info[1:]
-			if case_info[1] == 'p':
+			elif case_info[1] == 'p':
 				form = f"{case_info[0]} ap"
 				forms[form].append(span.text.strip())
 			elif case_info[1] == 'm//n':
@@ -258,16 +258,21 @@ def parse_wiktionary_table(w, inflections):
 		if len(items) > 0:
 			cat = 'pronoun'
 	forms = None
+	form_type = None
 	if cat == 'verb':
+		form_type = 'verb'
 		forms = parse_verb(items)
 	if cat == 'noun':
+		form_type = 'noun'
 		forms = parse_noun(items)
 	if cat == 'adj':
+		form_type = 'adj'
 		forms = parse_adj(items)
 	if cat == 'pronoun':
+		form_type = 'noun'
 		forms = parse_pronoun(w)
 
-	return forms
+	return forms, form_type
 
 
 def dump_wiktionary_cache():
@@ -445,19 +450,23 @@ def scrape_inflection(word):
 					for td in tr.find_all('td'):
 						row.append(td.text.strip())
 					rows.append(row)
+				ft = None
 				if len(rows) == 0: 
 					f = {}
 				if len(rows) == 0:
 					f = {}  # this is indeclinable
 				elif rows[0][0] == 'Інфінітив':
 					f = parse_verbs(rows)
+					ft = 'verb'
 				elif rows[1][0] == 'називний':
 					f = parse_nouns(rows)
+					ft = 'noun'
 				elif rows[1][0] == 'чол. р.':
 					f = parse_adjectives(rows)
-				results.append([found_word, word_info, f])
+					ft = 'adj'
+				results.append([found_word, word_info, f, ft])
 			else:  # this means it's a blank
-				results.append([None, None, None])
+				results.append([None, None, None, None])
 	return results
 			
 
@@ -516,7 +525,7 @@ def get_inflection(word, use_cache=True):
 		results = inflection_cache[no_accent]
 
 	def clean_result(res):
-		found_word, word_info, forms = res
+		found_word, word_info, forms, form_type = res
 		if found_word:
 			word_len = len(no_accent.split())
 			found_word = ' '.join(found_word.split()[:word_len])
@@ -532,7 +541,7 @@ def get_inflection(word, use_cache=True):
 				form = forms[form_id]
 				forms[form_id] = [x.replace('*', '').strip() for x in form.split(',')]
 				forms[form_id] = [' '.join(x.split()[-1 * word_len:]) for x in forms[form_id]]
-			return (found_word, word_info, forms)
+			return (found_word, word_info, forms, form_type)
 		return res
 
 	results = [clean_result(x) for x in results]

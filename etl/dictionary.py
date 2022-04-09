@@ -9,8 +9,34 @@ cyrillic = "ЄІЇАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮ
 class Forms:
 	
 	def __init__(self, forms, form_type):
-		self.forms = forms
+		self.forms = {}
+		self.add_forms(forms)
 		self.form_type = form_type
+		
+	def add_forms(self, forms):
+		if forms: 
+			if self.forms:
+				for key in (self.forms.keys() | forms.keys()):
+					these_forms = []
+					other_forms = []
+					if key in self.forms:
+						these_forms = self.forms[key]
+					if key in forms:
+						other_forms = forms[key]
+					surplus = []
+					if len(these_forms) < len(other_forms):
+						surplus = other_forms[len(these_forms):]
+					elif len(these_forms) > len(other_forms):
+						surplus = these_forms[len(other_forms):]
+					self.forms[key] = [x for pair in zip(these_forms, other_forms) for x in pair] + surplus
+			else:
+				self.forms = forms
+
+		# remove duplicates
+		for form_id in self.forms:
+			form_list = self.forms[form_id]
+			new_form_list = {form: None for form in form_list}
+			self.forms[form_id] = [x for x in new_form_list]	
 
 
 class Usage:
@@ -98,24 +124,12 @@ class Usage:
 	def get_info(self):
 		return list(self.info.keys())
 
-	def add_forms(self, forms):
-		if forms: 
-			if self.forms:
-				for key in (self.forms.keys() | forms.keys()):
-					these_forms = []
-					other_forms = []
-					if key in self.forms:
-						these_forms = self.forms[key]
-					if key in forms:
-						other_forms = forms[key]
-					surplus = []
-					if len(these_forms) < len(other_forms):
-						surplus = other_forms[len(these_forms):]
-					elif len(these_forms) > len(other_forms):
-						surplus = these_forms[len(other_forms):]
-					self.forms[key] = [x for pair in zip(these_forms, other_forms) for x in pair] + surplus
-			else:
-				self.forms = forms
+	def add_forms(self, forms, form_type):
+		if form_type in self.forms:
+			self.forms[form_type].add_forms(forms)
+		else:
+			forms = Forms(forms, form_type)
+			self.forms[form_type] = forms
 
 	def add_inflection(self, results, force=False):
 
@@ -127,11 +141,11 @@ class Usage:
 
 		added_flag = False
 		new_usages = []
-		for found_word, word_info, forms in results:
+		for found_word, word_info, forms, form_type in results:
 			if found_word and self.pos and self.pos in word_info:  
 				if self.word == found_word: # perfect match!
 					self.add_info(word_info)
-					self.add_forms(forms)
+					self.add_forms(forms, form_type)
 					added_flag = True
 				else:
 					this_inflection = get_inflection_positions(self.word) 
@@ -141,7 +155,7 @@ class Usage:
 						new_usage.definitions = deepcopy(self.definitions)
 						new_usage.alerted_definitions = deepcopy(self.alerted_definitions)
 						new_usage.add_info(word_info)
-						new_usage.add_forms(forms)
+						new_usage.add_forms(forms, form_type)
 						new_usages.append(new_usage)
 						added_flag = True
 			elif force:
@@ -164,6 +178,12 @@ class Usage:
 				result.append(d)
 		return result
 
+	def get_forms(self):
+		results = {}
+		for forms in self.forms.values():
+			results = {**results, **forms.forms}
+		return results
+
 	def merge(self, other, accept_alerts=True):
 		new_usage = Usage(self.word, self.pos)
 		these_definitions = self.get_definitions()
@@ -180,15 +200,18 @@ class Usage:
 				new_usage.add_definition(d, alert=d in other.alerted_definitions)
 		self.definitions = new_usage.definitions
 		self.alerted_definitions = new_usage.alerted_definitions
-		if len(self.forms.keys()) == 0 and len(other.forms.keys()) > 0:
-			self.forms = other.forms
+		for ft, forms in other.forms.items():
+			if ft in self.forms:
+				self.forms[ft].add_forms(forms.forms)
+			else:
+				self.forms[ft] = forms
 
 	def get_dict(self):
 		return {
 			'defs': self.get_definitions(),
 			'freq': self.frequency,
 			'info': self.get_info(),
-			'forms': self.forms
+			'forms': self.get_forms()
 		}
 
 
@@ -293,8 +316,8 @@ class Word:
 	def add_info(self, pos, word_info):
 		self.usages[pos].add_info(word_info)
 		
-	def add_forms(self, pos, forms):
-		self.usages[pos].add_forms(forms)
+	def add_forms(self, pos, forms, form_type):
+		self.usages[pos].add_forms(forms, form_type)
 
 	def add_inflections(self, results):
 		added_flag = False
