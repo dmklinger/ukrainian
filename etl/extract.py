@@ -2,6 +2,7 @@ import bz2
 import os
 import requests
 import json
+from urllib import parse
 from collections import defaultdict
 from bs4 import BeautifulSoup, NavigableString
 
@@ -14,6 +15,26 @@ try:
 		wiktionary_cache = json.loads(f.read())
 except:  # does not exist yet
 	wiktionary_cache = {}
+
+def get_viewstate(bs=None):
+	if bs is None:
+		url = "https://lcorp.ulif.org.ua/dictua/dictua.aspx"
+		req = requests.get(url)
+		data = req.text
+		bs = BeautifulSoup(data, features='lxml')
+	return (
+		bs.find("input", {"id": "__VIEWSTATE"}).attrs['value'],
+		bs.find("input", {"id": "__VIEWSTATEGENERATOR"}).attrs['value'],
+		bs.find("input", {"id": "__EVENTVALIDATION"}).attrs['value'],
+	)
+
+vs, vsg, ev = get_viewstate()
+
+try:
+	with open('data/inflection_raw_data.json', 'r', encoding='utf-8') as f:
+		inflection_cache = json.loads(f.read())
+except:
+	inflection_cache = {}
 
 
 def get_ontolex(use_cache=True):
@@ -120,6 +141,7 @@ def get_wiktionary_word(word, use_cache=True):
 			if len(glosses) > 0:
 				for g in glosses:
 					w.add_definition(pos, g)
+					w.add_info(list(w.usages.keys())[0], word_info)
 		inflection_pointer = word_pointer.parent
 		if pos != 'verb':
 			inflection_pointer = inflection_pointer.find_next('span', text='Declension')
@@ -132,8 +154,7 @@ def get_wiktionary_word(word, use_cache=True):
 			table = inflection_pointer.find_next('table', {'class': 'inflection-table inflection inflection-uk inflection-verb'})
 		if table and len(w.usages.keys()) > 0:
 			forms = parse_wiktionary_table(accented_name, table) 
-			if forms:
-				w.add_forms(list(w.usages.keys())[0], forms)
+			w.add_forms(list(w.usages.keys())[0], forms)
 		results.append(w)
 	return results
 
@@ -253,6 +274,174 @@ def parse_wiktionary_table(w, inflections):
 def dump_wiktionary_cache():
 	with open(f'data/wiktionary_raw_data.json', 'w+', encoding='utf-8') as f:
 		f.write(json.dumps(wiktionary_cache, ensure_ascii=False))
+
+
+def scrape_inflection(word):
+	
+	def parse_verbs(rows):
+		forms = {}
+		last_seen_type = None
+		current_tense = None
+		for row in rows:
+			if row[0] == 'Інфінітив':
+				forms['inf'] = row[1]
+			if 'Наказовий' in row[0]:
+				current_tense = 'imp'
+			if 'МАЙБУТНІЙ' in row[0]:
+				current_tense = 'fut'
+			if 'ТЕПЕРІШНІЙ' in row[0]:
+				current_tense = 'pres'
+			if 'МИНУЛИЙ' in row[0]:
+				current_tense = 'past'
+			if row[0] == '1 особа':
+				if current_tense == 'imp':
+					forms['imp 1p'] = row[2]
+				else:
+					forms[f'{current_tense} 1s'] = row[1]
+					forms[f'{current_tense} 1p'] = row[2]
+			if row[0] == '2 особа':
+				forms[f'{current_tense} 2s'] = row[1]
+				forms[f'{current_tense} 2p'] = row[2]
+			if row[0] == '3 особа':
+				forms[f'{current_tense} 3s'] = row[1]
+				forms[f'{current_tense} 3p'] = row[2]
+			if 'чол.' in row[0]:
+				forms['past ms'] = row[1]
+				forms['past p'] = row[2]
+			if 'жін.' in row[0]:
+				forms['past fs'] = row[1]
+			if 'сер.' in row[0]:
+				forms['past ns'] = row[1]
+			if row[0] in ('Активний дієприкметник', 'Пасивний дієприкметник', 'Дієприслівник', 'Безособова форма'):
+				last_seen_type = row[0]
+			elif last_seen_type is not None:
+				form = current_tense + ' ' + {
+					'Активний дієприкметник': 'act pp',
+					'Пасивний дієприкметник': 'pas pp',
+					'Дієприслівник': 'adv pp',
+					'Безособова форма': 'imp pp'
+				}[last_seen_type]
+				forms[form] = row[0]
+		for f in list(forms.keys()):
+			if forms[f] == '':
+				del forms[f]
+		return forms
+
+	def parse_nouns(rows):
+		forms = {}
+		for row in rows:
+			case = None
+			if row[0] == 'називний':
+				case = 'nom'
+			if row[0] == 'родовий':
+				case = 'gen'
+			if row[0] == 'давальний':
+				case = 'dat'
+			if row[0] == 'знахідний':
+				case = 'acc'
+			if row[0] == 'орудний':
+				case = 'ins'
+			if row[0] == 'місцевий':
+				case = 'loc'
+			if row[0] == 'кличний':
+				case = 'voc'
+			if case is not None:
+				if len(row) > 2:
+					forms[f'{case} ns'] = row[1]
+					forms[f'{case} np'] = row[2]
+				else:
+					forms[f'{case} n'] = row[1]
+		return forms
+
+	def parse_adjectives(rows):
+		forms = {}
+		for row in rows:
+			case = None
+			if row[0] == 'називний':
+				case = 'nom'
+			if row[0] == 'родовий':
+				case = 'gen'
+			if row[0] == 'давальний':
+				case = 'dat'
+			if row[0] == 'знахідний':
+				case = 'acc'
+			if row[0] == 'орудний':
+				case = 'ins'
+			if row[0] == 'місцевий':
+				case = 'loc'
+			if row[0] == 'кличний':
+				case = 'voc'
+			if case is not None:
+				forms[f'{case} am'] = row[1]
+				forms[f'{case} af'] = row[2]
+				forms[f'{case} an'] = row[3]
+				forms[f'{case} ap'] = row[4]
+		return forms
+
+	s = requests.session()
+
+	# initial search
+	data={
+		'ctl00$ContentPlaceHolder1$ScriptManager1': 'ctl00$ContentPlaceHolder1$UpdText|ctl00$ContentPlaceHolder1$search', 
+		'__EVENTTARGET': '',
+		'__EVENTARGUMENT': '',
+		'__VIEWSTATE': parse.quote(vs, safe=""),
+		'__VIEWSTATEGENERATOR': parse.quote(vsg, safe=""),
+		'__EVENTVALIDATION': parse.quote(ev, safe=""),
+		'ctl00$ContentPlaceHolder1$tsearch': parse.quote(f'{word}', safe=""),
+		'ctl00$ContentPlaceHolder1$search.x': '0',
+		'ctl00$ContentPlaceHolder1$search.y': '0'
+	}
+	data = '&'.join([f"{key}={val}" for key, val in data.items()])
+
+	result = s.post(
+		'https://lcorp.ulif.org.ua/dictua/dictua.aspx', 
+		headers={
+			'Content-Type': 'application/x-www-form-urlencoded',
+			'Origin': 'https://lcorp.ulif.org.ua',
+			'Referer': 'https://lcorp.ulif.org.ua/dictua/dictua.aspx'
+		},
+		data=data
+	)
+	result = BeautifulSoup(result.text, features='lxml')
+	index = result.find('table', id='ctl00_ContentPlaceHolder1_dgv')
+	other_words = index.find_all('a') if index else []
+
+	# subsequent searches
+	for i, a in enumerate(other_words):
+		if a.text.replace('́','') == word.replace('́',''):
+			# if we get here, we found it
+			data={
+				'ctl00$ContentPlaceHolder1$ScriptManager1': 'ctl00$ContentPlaceHolder1$UpdText|ctl00$ContentPlaceHolder1$dgv', 
+				'__EVENTTARGET': parse.quote('ctl00$ContentPlaceHolder1$dgv', safe=""),
+				'__EVENTARGUMENT': parse.quote(f'Select${i}', safe=""),
+				'__VIEWSTATE': parse.quote(vs, safe=""),
+				'__VIEWSTATEGENERATOR': parse.quote(vsg, safe=""),
+				'__EVENTVALIDATION': parse.quote(ev, safe=""),
+				'ctl00$ContentPlaceHolder1$tsearch': parse.quote(f'{word}', safe="")
+			}
+			data = '&'.join([f"{key}={val}" for key, val in data.items()]) + '&'
+			result = s.post(
+				'https://lcorp.ulif.org.ua/dictua/dictua.aspx', 
+				headers={
+					'Content-Type': 'application/x-www-form-urlencoded',
+					'Origin': 'https://lcorp.ulif.org.ua',
+					'Referer': 'https://lcorp.ulif.org.ua/dictua/dictua.aspx'
+				},
+				data=data
+			)
+			result = BeautifulSoup(result.text, features='lxml')
+			inflections = result.find('td', id='ctl00_ContentPlaceHolder1_article')
+			found_word = inflections.find(class_='word_style').text.strip()
+			word_info = inflections.find(class_='gram_style').text.strip()
+			print(found_word, word_info)	
+
+def get_inflection(word, use_cache=True):
+
+	if word in inflection_cache and use_cache:
+		inflection = inflection_cache[word]
+	else:
+		scrape_inflection(word)
 
 
 def get_frequency_list():

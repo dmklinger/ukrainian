@@ -15,6 +15,7 @@ class Usage:
 		self.alerted_definitions = {}
 		self.frequency = None
 		self.forms = {}
+		self.info = {}
 
 	def add_definitions(self, definitions):
 		for d in definitions:
@@ -82,8 +83,16 @@ class Usage:
 	def add_frequency(self, frequency):
 		self.frequency = frequency
 
+	def add_info(self, info):
+		if info:
+			self.info[info] = None
+
+	def get_info(self):
+		return list(self.info.keys())
+
 	def add_forms(self, forms):
-		self.forms = forms
+		if forms:
+			self.forms = forms
 
 	def get_definitions(self, accept_alerts=True):
 		result = []
@@ -117,6 +126,7 @@ class Usage:
 		return {
 			'defs': self.get_definitions(),
 			'freq': self.frequency,
+			'info': self.get_info(),
 			'forms': self.forms
 		}
 
@@ -218,6 +228,9 @@ class Word:
 					usage.add_frequency(None)
 			else:
 				usage.add_frequency(None)
+
+	def add_info(self, pos, word_info):
+		self.usages[pos].add_info(word_info)
 		
 	def add_forms(self, pos, forms):
 		self.usages[pos].add_forms(forms)
@@ -295,6 +308,7 @@ class Dictionary:
 		self.clean_alerted_words()
 		self.garbage_collect()
 		self.add_frequencies()
+		self.get_inflections()
 
 	def clean_alerted_words(self):
 		for _, w in self.dict.items():
@@ -314,6 +328,10 @@ class Dictionary:
 				word.add_frequencies(frequencies[word.get_word_no_accent()])
 			else:
 				word.add_frequencies(None)
+
+	def get_inflections(self):
+		for _, word in self.dict.items():
+			extract.get_inflection(word.get_word_no_accent())
 
 	def get_dict(self):
 		dict = {}
