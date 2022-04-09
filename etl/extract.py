@@ -4,11 +4,14 @@ import requests
 import json
 from urllib import parse
 from collections import defaultdict
+from copy import deepcopy
 from bs4 import BeautifulSoup, NavigableString
 
-from dictionary import Word
+from dictionary import Word, cyrillic
 
 os.makedirs('data', exist_ok=True)
+
+session = requests.session()
 
 try:
 	with open('data/wiktionary_raw_data.json', 'r', encoding='utf-8') as f:
@@ -19,7 +22,7 @@ except:  # does not exist yet
 def get_viewstate(bs=None):
 	if bs is None:
 		url = "https://lcorp.ulif.org.ua/dictua/dictua.aspx"
-		req = requests.get(url)
+		req = session.get(url)
 		data = req.text
 		bs = BeautifulSoup(data, features='lxml')
 	return (
@@ -40,7 +43,6 @@ except:
 def get_ontolex(use_cache=True):
 	if use_cache and os.path.exists('data/raw_dbnary_dump.ttl'):
 		return
-	session = requests.session()
 	print('downloading latest ontolex data from dbnary')
 	with session.get('http://kaiko.getalp.org/static/ontolex/latest/en_dbnary_ontolex.ttl.bz2', stream=True) as f:
 		data = bz2.BZ2File(f.raw).read()
@@ -51,8 +53,6 @@ def get_ontolex(use_cache=True):
 
 
 def get_lemmas():
-	session = requests.session()
-
 	def add_words(words, results):
 		for word in results['query']['categorymembers']:
 			title = word['title']
@@ -73,7 +73,6 @@ def get_lemmas():
 
 
 def get_wiktionary_word(word, use_cache=True):
-	session = requests.session()
 	if word in wiktionary_cache and use_cache:
 		article = wiktionary_cache[word]
 	else:
@@ -378,8 +377,6 @@ def scrape_inflection(word):
 				forms[f'{case} ap'] = row[4]
 		return forms
 
-	s = requests.session()
-
 	# initial search
 	data={
 		'ctl00$ContentPlaceHolder1$ScriptManager1': 'ctl00$ContentPlaceHolder1$UpdText|ctl00$ContentPlaceHolder1$search', 
@@ -394,7 +391,7 @@ def scrape_inflection(word):
 	}
 	data = '&'.join([f"{key}={val}" for key, val in data.items()])
 
-	result = s.post(
+	result = session.post(
 		'https://lcorp.ulif.org.ua/dictua/dictua.aspx', 
 		headers={
 			'Content-Type': 'application/x-www-form-urlencoded',
@@ -408,9 +405,10 @@ def scrape_inflection(word):
 	other_words = index.find_all('a') if index else []
 
 	# subsequent searches
+	results = []
 	for i, a in enumerate(other_words):
 		if a.text.replace('́','') == word.replace('́',''):
-			# if we get here, we found it
+			# if we get here, we found it, even if we can't find results
 			data={
 				'ctl00$ContentPlaceHolder1$ScriptManager1': 'ctl00$ContentPlaceHolder1$UpdText|ctl00$ContentPlaceHolder1$dgv', 
 				'__EVENTTARGET': parse.quote('ctl00$ContentPlaceHolder1$dgv', safe=""),
@@ -421,7 +419,7 @@ def scrape_inflection(word):
 				'ctl00$ContentPlaceHolder1$tsearch': parse.quote(f'{word}', safe="")
 			}
 			data = '&'.join([f"{key}={val}" for key, val in data.items()]) + '&'
-			result = s.post(
+			result = session.post(
 				'https://lcorp.ulif.org.ua/dictua/dictua.aspx', 
 				headers={
 					'Content-Type': 'application/x-www-form-urlencoded',
@@ -432,16 +430,117 @@ def scrape_inflection(word):
 			)
 			result = BeautifulSoup(result.text, features='lxml')
 			inflections = result.find('td', id='ctl00_ContentPlaceHolder1_article')
-			found_word = inflections.find(class_='word_style').text.strip()
-			word_info = inflections.find(class_='gram_style').text.strip()
-			print(found_word, word_info)	
+			if inflections:
+				found_word = None
+				word_info = None
+				found_word = inflections.find(class_='word_style')
+				if found_word:
+					found_word = found_word.text.strip()
+				word_info = inflections.find(class_='gram_style')
+				if word_info:
+					word_info = word_info.text.strip()
+				rows = []
+				for tr in inflections.find_all('tr'):
+					row = []
+					for td in tr.find_all('td'):
+						row.append(td.text.strip())
+					rows.append(row)
+				if len(rows) == 0: 
+					f = {}
+				if len(rows) == 0:
+					f = {}  # this is indeclinable
+				elif rows[0][0] == 'Інфінітив':
+					f = parse_verbs(rows)
+				elif rows[1][0] == 'називний':
+					f = parse_nouns(rows)
+				elif rows[1][0] == 'чол. р.':
+					f = parse_adjectives(rows)
+				results.append([found_word, word_info, f])
+			else:  # this means it's a blank
+				results.append([None, None, None])
+	return results
+			
 
 def get_inflection(word, use_cache=True):
+	
+	translations = {
+		'або': 'or',
+		'абревіатура': 'abbreviations',
+		'вигук': 'interjection',
+		'виду': 'form',
+		'вищий': 'highest',
+		'власна': 'own',
+		'вставне': 'interjection',
+		'два': 'two',
+		'доконаного': 'perfective',
+		'дієприкметник': 'adjective',
+		'дієприслівник': 'adverb',
+		'дієслово': 'verb',
+		'жіночого': 'female',
+		'з': 'with',
+		'займенник': 'pronoun',
+		'кількісний': 'determiner',
+		'множинний': 'plural',
+		'назва': 'noun',
+		'найвищий': 'lowest',
+		'недоконаного': 'imperfective',
+		'порядковий': 'adjective',
+		'прийменник': 'preposition',
+		'прийменником': 'preposition',
+		'прикметник': 'adjective',
+		'прислівник': 'adverb',
+		'прислівником': 'adverb',
+		'присудкове': 'predicate',
+		'прізвище': 'noun',
+		'роду': 'gender',
+		'середнього': 'neuter',
+		'слово': 'word',
+		'сполука': 'conjunction',
+		'сполучник': 'conjunction',
+		'ступінь': 'degree',
+		'типу': 'type',
+		'частка': 'particle',
+		'часткою': 'particle',
+		'числівник': 'numeral',
+		'чоловічого': 'male',
+		'і': 'and',
+		'іменник': 'noun',
+		'істота': 'animate',
+	}
 
-	if word in inflection_cache and use_cache:
-		inflection = inflection_cache[word]
+	no_accent = word.get_word_no_accent()
+	if no_accent not in inflection_cache or not use_cache:
+		results = scrape_inflection(no_accent)
+		inflection_cache[no_accent] = results
 	else:
-		scrape_inflection(word)
+		results = inflection_cache[no_accent]
+
+	def clean_result(res):
+		found_word, word_info, forms = res
+		if found_word:
+			word_len = len(no_accent.split())
+			forms = deepcopy(forms)
+			word_info = ''.join([x for x in word_info if x in cyrillic + "' "])
+			word_info = ' '.join([translations[x] for x in word_info.split()])
+			print(word_info)
+			
+			for form_id in list(forms.keys()):
+				form = forms[form_id]
+				if form == "":
+					del forms[form_id]
+			for form_id in forms:
+				form = forms[form_id]
+				forms[form_id] = [x.replace('*', '').strip() for x in form.split(',')]
+				forms[form_id] = [' '.join(x.split()[-1 * word_len:]) for x in forms[form_id]]
+			return (found_word, word_info, forms)
+		return res
+
+	results = [clean_result(x) for x in results]
+
+
+def dump_inflection_cache():
+	with open(f'data/inflection_raw_data.json', 'w+', encoding='utf-8') as f:
+		f.write(json.dumps(inflection_cache, ensure_ascii=False, indent=2))
 
 
 def get_frequency_list():
@@ -470,7 +569,6 @@ def get_frequency_list():
 			'ім. с. р.': 'noun',  # neuter
 			'ім. ч. р.': 'noun',  # male
 		}
-		session = requests.session()
 		frequency_dict = defaultdict(lambda: {})
 		with session.get('http://ukrkniga.org.ua/ukr_rate/hproz_92k_lex_dict_orig.csv', stream=True) as f:
 			f.encoding = 'utf-8'

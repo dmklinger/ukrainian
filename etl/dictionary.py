@@ -294,6 +294,7 @@ class Dictionary:
 		words = extract.get_lemmas()
 		print('done extracting lemmas')
 		n = len(words)
+		print('parsing wiktionary data')
 		try:
 			for i, w in enumerate(words):
 				if i % 100 == 0:
@@ -305,6 +306,7 @@ class Dictionary:
 			raise e
 		finally:
 			extract.dump_wiktionary_cache()
+		print('done parsing wiktionary data')
 		self.clean_alerted_words()
 		self.garbage_collect()
 		self.add_frequencies()
@@ -330,8 +332,18 @@ class Dictionary:
 				word.add_frequencies(None)
 
 	def get_inflections(self):
-		for _, word in self.dict.items():
-			extract.get_inflection(word.get_word_no_accent())
+		print("getting inflections")
+		try:
+			n = len(self.dict.values())
+			for i, word in enumerate(self.dict.keys()):
+				if i % 100 == 0:
+					print(f"{i} of {n}")
+				w = self.dict[word]
+				extract.get_inflection(w)
+		except Exception as e:
+			raise e
+		finally:
+			extract.dump_inflection_cache()
 
 	def get_dict(self):
 		dict = {}
