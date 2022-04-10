@@ -393,8 +393,10 @@ function searchHelper() {
 		searchTerm = searchTerm.trim().replaceAll(/\s+/g, ' ')
 		// const literalResults = searchTerm.matchAll('"([^"]*)"')
 		const literalResults = searchTerm.matchAll(/"([^"]*)"/g)
+		let literalPhrases = Array()
 		let literalWords = Array()
 		for (let literalRes of literalResults) {
+			literalPhrases.push(literalRes[1])
 			literalWords = literalWords.concat(literalRes[1].split(' '));
 		}
 		const fuzzyResults = searchTerm.replaceAll(/"([^"]*)"/g, '').trim().replaceAll(/\s+/g, ' ')
@@ -422,15 +424,26 @@ function searchHelper() {
 				let results = d3.filter(Object.keys(index[word[0]]), x => x === word);
 				indexes = []
 				for (const res of results) { indexes = indexes.concat(index[res[0]][res])}
-				console.log(indexes)
 			} else {
 				let results = d3.filter(Object.keys(index[word[0]]), x => x === word);
 				let theseIndexes = []
 				for (const res of results) { theseIndexes = theseIndexes.concat(index[res[0]][res])}
-				console.log(theseIndexes)
 				indexes = d3.filter(indexes, x => theseIndexes.includes(x))
-				console.log(indexes)
 			}
+		}
+		// ensure actual phrase is included
+		for (let literalRes of literalPhrases) {
+			console.log(literalRes)
+			let allData = d3.filter(data, x => indexes.includes(x.index))
+			let goodData = d3.filter(
+				allData,
+				x => d3.filter(
+					x.defs, 
+					y => y.includes(literalRes)
+				).length > 0
+			).map(x => x.index)
+			
+			indexes = d3.filter(indexes, x => goodData.includes(x))
 		}
 		if (indexes) {
 			numDisplayed = 300;
