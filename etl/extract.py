@@ -115,6 +115,7 @@ def get_wiktionary_word(word, use_cache=True):
 		ds = def_pointer.find_all('li')
 		bad_stuff = def_pointer.find_all('span', class_='HQToggle') \
 			+ def_pointer.find_all('abbr') \
+			+ def_pointer.find_all('ul') \
 			+ def_pointer.find_all(lang='uk-Latn') \
 			+ def_pointer.find_all(class_='mention-gloss-paren annotation-paren') \
 			+ def_pointer.find_all(class_='mention-gloss-double-quote') \

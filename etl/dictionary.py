@@ -340,12 +340,11 @@ class Word:
 			('’', "'"),
 			(',:', ':'),
 			('\\', ''),
-			(',)', ')')
+			(',)', ')'),
+			(',,', ','),
+			(', (', ' (')
 		]
 		for x, y in bad_stuff:
-			if x in definition:
-				definition = definition.replace(x, y)
-		for x, y in bad_stuff:  # do it again, just in case...
 			if x in definition:
 				definition = definition.replace(x, y)
 		definition = ' '.join(definition.split())
