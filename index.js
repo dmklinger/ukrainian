@@ -433,7 +433,6 @@ function searchHelper() {
 		}
 		// ensure actual phrase is included
 		for (let literalRes of literalPhrases) {
-			console.log(literalRes)
 			let allData = d3.filter(data, x => indexes.includes(x.index))
 			let goodData = d3.filter(
 				allData,

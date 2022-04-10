@@ -340,7 +340,8 @@ class Word:
 			('\\', ''),
 			(',)', ')'),
 			(',,', ','),
-			(', (', ' (')
+			(', (', ' ('),
+			('!slash!', '/')
 		]
 		for x, y in bad_stuff:
 			if x in definition:
