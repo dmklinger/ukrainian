@@ -36,8 +36,22 @@ class Forms:
 		# remove duplicates
 		for form_id in self.forms:
 			form_list = self.forms[form_id]
-			new_form_list = {form: None for form in form_list}
-			self.forms[form_id] = [x.replace('*', '') for x in new_form_list]	
+			new_form_list = {form.replace('*', ''): None for form in form_list}
+			self.forms[form_id] = [x for x in new_form_list]
+
+		# remove unaccented forms when an accented form exists
+		for form_id in self.forms:
+			form_list = self.forms[form_id]
+			has_accent = False
+			for f in form_list:
+				if "́" in f:
+					has_accent = True
+			if has_accent:
+				new_form_list = []
+				for f in form_list:
+					if "́" in f:
+						new_form_list.append(f)
+				self.forms[form_id] = new_form_list
 
 	def get_final_forms(self):
 		if self.form_type != 'verb':
@@ -441,7 +455,7 @@ class Word:
 					f = f.replace('́', '')
 					f = re.sub(r"[^\w']+", ' ', f).split()
 					results += f
-		return results
+		return results + [self.get_word_no_accent()]
 
 	def get_dict(self):
 		dict = {}
