@@ -1,7 +1,6 @@
 'use strict';
 
-var main = (data) => {
-	console.log(data)
+var main = (data, increase) => {
 	let tr = d3.select(".main")
 		.selectAll('.row')
 		.data(data, (d) => { return d.index })
@@ -272,7 +271,7 @@ var main = (data) => {
 				}
 			}
 		});
-	window.scrollTo({top:0})
+	if (!increase) { window.scrollTo({top:0}); }
 }
 
 let numDisplayed = 300
@@ -356,7 +355,7 @@ fetch('words.json')
 window.onscroll = (_) => {
 	if (window.innerHeight + window.scrollY + 1000 >= document.body.offsetHeight) {
 		numDisplayed += 100
-		main(data.slice(0, numDisplayed));
+		main(data.slice(0, numDisplayed), true);
 	}
 }
 
@@ -391,19 +390,49 @@ function filterHelper() {
 
 function searchHelper() {
 	if (index && searchTerm) {
-		let results;
-		if (searchTerm.endsWith(' ')) {
-			searchTerm = searchTerm.trim();
-			results = d3.filter(Object.keys(index[searchTerm[0]]), x => x === searchTerm)
+		searchTerm = searchTerm.trim().replaceAll(/\s+/g, ' ')
+		// const literalResults = searchTerm.matchAll('"([^"]*)"')
+		const literalResults = searchTerm.matchAll(/"([^"]*)"/g)
+		let literalWords = Array()
+		for (let literalRes of literalResults) {
+			literalWords = literalWords.concat(literalRes[1].split(' '));
 		}
-		else {
-			results = d3.filter(Object.keys(index[searchTerm[0]]), x => x.startsWith(searchTerm) || x === searchTerm)
+		const fuzzyResults = searchTerm.replaceAll(/"([^"]*)"/g, '').trim().replaceAll(/\s+/g, ' ')
+		let fuzzyWords = Array()
+		for (let fuzzyRes of fuzzyResults.split(' ')) {
+			fuzzyWords.push(fuzzyRes);
 		}
-		if (results) {
-			let indexes = []
-			for (const res of results) {
-				indexes = indexes.concat(index[searchTerm[0]][res])
+		let indexes;
+		for (let word of fuzzyWords) {
+			if (!word) break;
+			if (!indexes) {
+				let results = d3.filter(Object.keys(index[word[0]]), x => x.startsWith(word) || x === word);
+				indexes = []
+				for (const res of results) { indexes = indexes.concat(index[res[0]][res])}
+			} else {
+				let results = d3.filter(Object.keys(index[word[0]]), x => x.startsWith(word) || x === word);
+				let theseIndexes = []
+				for (const res of results) { theseIndexes = theseIndexes.concat(index[res[0]][res])}
+				indexes = d3.filter(indexes, x => theseIndexes.includes(x))
 			}
+		}
+		for (let word of literalWords) {
+			if (!word) break;
+			if (!indexes) {
+				let results = d3.filter(Object.keys(index[word[0]]), x => x === word);
+				indexes = []
+				for (const res of results) { indexes = indexes.concat(index[res[0]][res])}
+				console.log(indexes)
+			} else {
+				let results = d3.filter(Object.keys(index[word[0]]), x => x === word);
+				let theseIndexes = []
+				for (const res of results) { theseIndexes = theseIndexes.concat(index[res[0]][res])}
+				console.log(theseIndexes)
+				indexes = d3.filter(indexes, x => theseIndexes.includes(x))
+				console.log(indexes)
+			}
+		}
+		if (indexes) {
 			numDisplayed = 300;
 			data = d3.filter(data, x => indexes.includes(x.index))
 		}
