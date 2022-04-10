@@ -161,13 +161,13 @@ class Usage:
 			elif force:
 				if self.word == found_word:
 					self.add_info(word_info)
-					self.add_forms(forms)
+					self.add_forms(forms, form_type)
 		if not added_flag:
 			print(self.word)
 			print(self.pos)
 			print(results)
 			print('--------------------')
-		return added_flag, new_usages
+		return not added_flag and len(self.forms) == 0, new_usages
 
 	def get_definitions(self, accept_alerts=True):
 		result = []
@@ -217,16 +217,14 @@ class Usage:
 
 class Word:
 
+
 	def __init__(self, word):
 		if word == "будова (bud'''o'''wa)":
 			word = 'будова'
 		self.word = word
 		self.usages = {}
 
-	def get_word_no_accent(self):
-		return self.word.replace("́", "")
-
-	def add_definition(self, pos, definition):
+	def replace_pos(pos):
 		replace = {
 			'conjunction': 'particle',
 			'determiner': 'particle',
@@ -240,6 +238,14 @@ class Word:
 			'prepositional phrase': 'phrase',
 			'proper noun': 'noun',
 		}
+		if pos in replace:
+			return replace[pos]
+		return pos
+
+	def get_word_no_accent(self):
+		return self.word.replace("́", "")
+
+	def add_definition(self, pos, definition):
 		if pos == 'verb' and len(definition.split()) == 1:
 			definition = f"to {definition}"
 		if '[1]' in definition:
@@ -267,11 +273,11 @@ class Word:
 		if 'This term needs a translation to English. Please help out and add a translation, then remove the text rfdef.' in definition:
 			return # No
 
-		replaced = None
+		replaced = pos
 
-		if pos in replace:
-			replaced = pos
-			pos = replace[pos]
+		pos = Word.replace_pos(pos)
+		if pos == replaced:
+			replaced = None
 
 		if pos in self.usages:
 			u = self.usages[pos]
@@ -320,11 +326,16 @@ class Word:
 		self.usages[pos].add_forms(forms, form_type)
 
 	def add_inflections(self, results):
-		added_flag = False
+		needs_flag = True
 		new_usages = []
 		for usage in self.usages.values():
-			added_flag, nu = usage.add_inflection(results)
+			this_needs, nu = usage.add_inflection(results)
+			if not this_needs:
+				needs_flag = False
 			new_usages += nu
+		if needs_flag:
+			for usage in self.usages.values():
+				usage.add_inflection(results, force=True)
 		return new_usages
 
 	def get_dict(self):

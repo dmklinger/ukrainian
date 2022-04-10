@@ -140,7 +140,7 @@ def get_wiktionary_word(word, use_cache=True):
 			if len(glosses) > 0:
 				for g in glosses:
 					w.add_definition(pos, g)
-					w.add_info(list(w.usages.keys())[0], word_info)
+					w.add_info(Word.replace_pos(pos), word_info)
 		inflection_pointer = word_pointer.parent
 		if pos != 'verb':
 			inflection_pointer = inflection_pointer.find_next('span', text='Declension')
@@ -153,7 +153,7 @@ def get_wiktionary_word(word, use_cache=True):
 			table = inflection_pointer.find_next('table', {'class': 'inflection-table inflection inflection-uk inflection-verb'})
 		if table and len(w.usages.keys()) > 0:
 			forms, form_type = parse_wiktionary_table(accented_name, table) 
-			w.add_forms(list(w.usages.keys())[0], forms, form_type)
+			w.add_forms(Word.replace_pos(pos), forms, form_type)
 		results.append(w)
 	return results
 
@@ -204,16 +204,19 @@ def parse_wiktionary_table(w, inflections):
 		for span in items:
 			case_info = span['class'][3].replace('-form-of', '').split('|')
 			if case_info[0] in ('an', 'in'):
-				if case_info[0] == 'an':
-					case_info = [None, None, None, None, None]
-				else:
-					case_info = case_info[1:]
-			elif case_info[1] == 'p':
+				case_info = case_info[1:]
+			if case_info[1] == 'p':
 				form = f"{case_info[0]} ap"
 				forms[form].append(span.text.strip())
 			elif case_info[1] == 'm//n':
 				form = f"{case_info[0]} am"
 				forms[form].append(span.text.strip())
+				form = f"{case_info[0]} an"
+				forms[form].append(span.text.strip())
+			elif case_info[1] == 'm':
+				form = f"{case_info[0]} am"
+				forms[form].append(span.text.strip())
+			elif case_info[1] == 'n':
 				form = f"{case_info[0]} an"
 				forms[form].append(span.text.strip())
 			else:
@@ -488,7 +491,7 @@ def get_inflection(word, use_cache=True):
 		'жіночого': 'female',
 		'з': 'with',
 		'займенник': 'pronoun',
-		'кількісний': 'particle',
+		'кількісний': 'determiner',
 		'множинний': 'plural',
 		'назва': 'noun',
 		'найвищий': 'lowest',
@@ -531,7 +534,7 @@ def get_inflection(word, use_cache=True):
 			found_word = ' '.join(found_word.split()[:word_len])
 			forms = deepcopy(forms)
 			word_info = ''.join([x for x in word_info if x in cyrillic + "' "])
-			word_info = ' '.join([translations[x] for x in word_info.split()])
+			word_info = ' '.join([Word.replace_pos(translations[x]) for x in word_info.split()])
 			
 			for form_id in list(forms.keys()):
 				form = forms[form_id]
