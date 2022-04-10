@@ -313,19 +313,23 @@ class Word:
 			definition = definition.replace('[1]', '')
 		elif definition.endswith(']') and '[' not in definition:
 			definition = definition[:-1]
-		for x, y in [
-				('“', '"'), 
-				('”', '"'), 
-				(r'{{', ''), 
-				(r'}}', ''), 
-				('()', ''), 
-				('\u200b', ''), 
-				(' :', ':'), 
-				('’', "'"),
-				(',:', ':'),
-				('\\', ''),
-				(',)', ')')
-			]:
+		bad_stuff = [
+			('“', '"'), 
+			('”', '"'), 
+			(r'{{', ''), 
+			(r'}}', ''), 
+			('()', ''), 
+			('\u200b', ''), 
+			(' :', ':'), 
+			('’', "'"),
+			(',:', ':'),
+			('\\', ''),
+			(',)', ')')
+		]
+		for x, y in bad_stuff:
+			if x in definition:
+				definition = definition.replace(x, y)
+		for x, y in bad_stuff:  # do it again, just in case...
 			if x in definition:
 				definition = definition.replace(x, y)
 		definition = ' '.join(definition.split())
@@ -567,6 +571,8 @@ class Dictionary:
 				x['word']
 			)
 		)
+		for i, r in enumerate(result):
+			r['index'] = i
 		return result
 
 	def make_index(self, loc, indent=None):

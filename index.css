@@ -10,7 +10,7 @@ body {
 	width: 100%; /*max(800px, 30%); */
 	background-color: white;
 	top: 0;
-	margin: 8px;
+	margin-bottom: 8px;
 	padding-top: 3px;
 	padding-bottom: 3px;
 	margin-left: auto;
