@@ -120,6 +120,7 @@ th:not(#leftLabel, #tenseMarker) {
 #tenseMarker {
 	/* border-bottom: 2px dashed black;  */
 	border-top: 2px solid black;
+	font-style: italic;
 }
 
 #ppLabel {

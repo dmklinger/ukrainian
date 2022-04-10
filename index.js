@@ -271,6 +271,15 @@ var main = (data, increase) => {
 				}
 			}
 		});
+
+	const highlightFunc = (t) => {
+		return t;
+	}
+	div.selectAll('li')
+		.text(highlightFunc)
+	div.selectAll('td')
+		.selectAll('p')
+		.text(highlightFunc)
 	if (!increase) { window.scrollTo({top:0}); }
 }
 
@@ -282,6 +291,8 @@ let curFilter;
 let sortInfo = 'freq';
 let index;
 let searchTerm;
+let literalPhrases;
+let fuzzyWords;
 
 document.addEventListener('copy', (event) => {
 	if (!document.querySelector('#stressCopy').checked) {
@@ -389,18 +400,21 @@ function filterHelper() {
 }
 
 function searchHelper() {
+	literalPhrases = null
+	fuzzyWords = null
 	if (index && searchTerm) {
-		searchTerm = searchTerm.trim().replaceAll(/\s+/g, ' ')
+		searchTerm = searchTerm.trim().replaceAll(/\s+/g, ' ').toLowerCase()
+		console.log(searchTerm)
 		// const literalResults = searchTerm.matchAll('"([^"]*)"')
 		const literalResults = searchTerm.matchAll(/"([^"]*)"/g)
-		let literalPhrases = Array()
+		literalPhrases = Array()
 		let literalWords = Array()
 		for (let literalRes of literalResults) {
 			literalPhrases.push(literalRes[1])
 			literalWords = literalWords.concat(literalRes[1].split(' '));
 		}
 		const fuzzyResults = searchTerm.replaceAll(/"([^"]*)"/g, '').trim().replaceAll(/\s+/g, ' ')
-		let fuzzyWords = Array()
+		fuzzyWords = Array()
 		for (let fuzzyRes of fuzzyResults.split(' ')) {
 			fuzzyWords.push(fuzzyRes);
 		}
@@ -438,8 +452,8 @@ function searchHelper() {
 				allData,
 				x => d3.filter(
 					x.defs, 
-					y => y.includes(literalRes)
-				).length > 0
+					y => y.toLowerCase().includes(literalRes) 
+				).length > 0 || x.word === literalRes
 			).map(x => x.index)
 			
 			indexes = d3.filter(indexes, x => goodData.includes(x))
