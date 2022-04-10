@@ -223,8 +223,10 @@ class Usage:
 						self.add_info(word_info)
 						self.add_forms(forms, form_type)
 						self.delete_me = False
-				elif self.pos not in ('noun', 'verb', 'adjective'):
-					self.delete_me = False
+		if force and self.pos not in ('noun', 'verb', 'adjective'):
+			self.delete_me = False
+		if not added_flag and len(self.forms) > 0:
+			self.delete_me = False
 		return not added_flag and len(self.forms) == 0, new_usages
 
 	def get_definitions(self, accept_alerts=True):
@@ -372,6 +374,12 @@ class Word:
 		for pos in list(self.usages.keys()):
 			usage = self.usages[pos]
 			if len(usage.definitions.keys()) == 0 or usage.delete_me or pos in ('suffix', 'prefix'):
+				if(len(usage.definitions.keys()) == 0):
+					print(f'DELETING: {self.word}, {pos} - reason: no more definitions')
+				elif usage.delete_me:
+					print(f'DELETING: {self.word}, {pos} - reason: said to delete')
+				elif pos in ('suffix', 'prefix'):
+					print(f'DELETING: {self.word}, {pos} - reason: bad pos')
 				del self.usages[pos]
 
 	def add_frequencies(self, frequencies):
@@ -522,6 +530,7 @@ class Dictionary:
 			word = self.dict[w]
 			word.garbage_collect()
 			if len(word.usages.keys()) == 0:
+				print(f'DELETING WORD: {w}')
 				del self.dict[w]
 
 	def add_frequencies(self):
