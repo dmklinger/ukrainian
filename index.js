@@ -273,13 +273,77 @@ var main = (data, increase) => {
 		});
 
 	const highlightFunc = (t) => {
+
+		const find = (word, phrase, literal) => {
+			const letters = 'abcdefghijklmnopqrstuvwxyzабвгдежзийклмнопрстуфхцчшщъыьэюяєії'
+			let startIndex = -1;
+			let parenthesis = 0;
+			let result = ''
+			let buffer = ''
+			for (let i = 0; i < phrase.length; i++) {
+				const thisLetter = phrase[i]
+				if (thisLetter === ')') { parenthesis++; };
+				if (thisLetter === '(') { parenthesis--; };
+				if (
+					startIndex === -1 && 
+					(i === 0 || !letters.includes(phrase[i - 1].toLowerCase()))
+					&& parenthesis === 0
+					&& thisLetter.toLowerCase() === word[0].toLowerCase()
+				) {
+					startIndex = 0;
+					buffer += thisLetter;
+				} else if (startIndex > -1) {
+					if (thisLetter === "́") {
+						buffer += thisLetter;
+					}
+					else {
+						startIndex ++;
+						if (startIndex <= word.length - 1 && thisLetter.toLowerCase() === word[startIndex].toLowerCase()) {
+							buffer += thisLetter;
+						} else {
+							result += buffer;
+							buffer = ''
+							startIndex = -1;
+							result += thisLetter;
+						} 
+						if (startIndex === word.length - 1) {
+							if (literal) {
+								if (i === phrase.length - 1 || !letters.includes(phrase[i + 1].toLowerCase())) {
+									result += `<span class=highlight>${buffer}</span>`
+								} else {
+									result += buffer
+								}
+							} else { result += `<span class=highlight>${buffer}</span>` }
+							buffer = ''
+							startIndex = -1
+						}
+					}
+				} else {
+					result += thisLetter;
+				}
+			}
+			return result
+		}
+		if (literalPhrases || fuzzyWords) {
+			let ret_val = t
+			for (const phrase of literalPhrases) {
+				ret_val = find(phrase, ret_val, true)
+			}
+			for (const word of fuzzyWords) {
+				ret_val = find(word, ret_val, false)
+			}
+			return ret_val; 
+		}
 		return t;
 	}
-	div.selectAll('li')
-		.text(highlightFunc)
-	div.selectAll('td')
+	d3.selectAll('li')
+		.html(function() { return highlightFunc(this.__data__) })
+	d3.selectAll('td')
 		.selectAll('p')
-		.text(highlightFunc)
+		.html(function() { return highlightFunc(this.__data__) })
+	d3.selectAll('p.title > b')
+		.html(function() { return highlightFunc(this.__data__.word) })
+
 	if (!increase) { window.scrollTo({top:0}); }
 }
 
@@ -404,8 +468,6 @@ function searchHelper() {
 	fuzzyWords = null
 	if (index && searchTerm) {
 		searchTerm = searchTerm.trim().replaceAll(/\s+/g, ' ').toLowerCase()
-		console.log(searchTerm)
-		// const literalResults = searchTerm.matchAll('"([^"]*)"')
 		const literalResults = searchTerm.matchAll(/"([^"]*)"/g)
 		literalPhrases = Array()
 		let literalWords = Array()

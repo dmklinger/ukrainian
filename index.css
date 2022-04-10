@@ -161,3 +161,7 @@ td {
 #indcl {
 	color: darkgrey;
 }
+
+span.highlight {
+	background-color: #fcfcae;
+}
