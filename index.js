@@ -292,6 +292,17 @@ var main = (data, increase) => {
 				) {
 					startIndex = 0;
 					buffer += thisLetter;
+					if (word.length == 1) {
+						if (!literal || i === phrase.length - 1 || !letters.includes(phrase[i + 1].toLowerCase())) {
+							result += `<span class=highlight>${buffer}</span>`;
+							startIndex = -1;
+							buffer = ''
+						} else {
+							result += buffer;
+							startIndex = -1;
+							buffer = ''
+						}
+					}
 				} else if (startIndex > -1) {
 					if (thisLetter === "́") {
 						buffer += thisLetter;
