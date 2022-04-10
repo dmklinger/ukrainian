@@ -49,7 +49,7 @@ class Usage:
 		self.frequency = None
 		self.forms = {}
 		self.info = {}
-		self.could_not_find_forms = False
+		self.delete_me = False
 
 	def add_definitions(self, definitions):
 		for d in definitions:
@@ -122,7 +122,38 @@ class Usage:
 			self.info[info] = None
 
 	def get_info(self):
-		return list(self.info.keys())
+		gender, aspect, animacy = set(), set(), set()
+		for info in self.info:
+			for word in info.split():
+				if word in ('f', 'female'):
+					gender.add('female')
+				if word in ('m', 'male'):
+					gender.add('male')
+				if word in ('animal', 'animate'):
+					animacy.add('animate')
+				if word in ('n', 'neuter'):
+					gender.add('neuter')
+				if word in ('inan'):
+					animacy.add('inanimate')
+				if word in ('imperfective', 'impf'):
+					aspect.add('imperfective')
+				if word in ('pf', 'perfective'):
+					aspect.add('perfective')
+		new_info = []
+		if len(gender) > 0:
+			gender = ' or '.join(gender)
+			new_info.append(gender)
+		if len(aspect) > 0:
+			aspect = ' or '.join(aspect)
+			new_info.append(aspect)
+		if len(animacy) > 0:
+			animacy = ' or '.join(animacy)
+			new_info.append(animacy)
+		if len(new_info) > 0:
+			new_info = ", ".join(new_info)
+		else:
+			new_info = None
+		return new_info
 
 	def add_forms(self, forms, form_type):
 		if form_type in self.forms:
@@ -157,16 +188,21 @@ class Usage:
 						new_usage.add_info(word_info)
 						new_usage.add_forms(forms, form_type)
 						new_usages.append(new_usage)
+						self.delete_me = True
 						added_flag = True
 			elif force:
 				if self.word == found_word:
-					self.add_info(word_info)
-					self.add_forms(forms, form_type)
-		if not added_flag:
-			print(self.word)
-			print(self.pos)
-			print(results)
-			print('--------------------')
+					if self.pos in ('noun', 'verb', 'adjective') and self.pos != form_type:
+						new_usage = Usage(self.word, form_type)
+						new_usage.definitions = deepcopy(self.definitions)
+						new_usage.alerted_definitions = deepcopy(self.alerted_definitions)
+						new_usage.add_info(word_info)
+						new_usage.add_forms(forms, form_type)
+						new_usages.append(new_usage)
+						self.delete_me = True
+					else:
+						self.add_info(word_info)
+						self.add_forms(forms, form_type)
 		return not added_flag and len(self.forms) == 0, new_usages
 
 	def get_definitions(self, accept_alerts=True):
@@ -306,10 +342,13 @@ class Word:
 	def garbage_collect(self):
 		for pos in list(self.usages.keys()):
 			usage = self.usages[pos]
-			if len(usage.definitions.keys()) == 0:
+			if len(usage.definitions.keys()) == 0 or usage.delete_me:
 				del self.usages[pos]
 
 	def add_frequencies(self, frequencies):
+		if frequencies:
+			for pos in list(frequencies.keys()):
+				frequencies[Word.replace_pos(pos)] = frequencies[pos]
 		for pos, usage in self.usages.items():
 			if frequencies:
 				if pos in frequencies:
@@ -335,7 +374,8 @@ class Word:
 			new_usages += nu
 		if needs_flag:
 			for usage in self.usages.values():
-				usage.add_inflection(results, force=True)
+				_, nu = usage.add_inflection(results, force=True)
+				new_usages += nu
 		return new_usages
 
 	def get_dict(self):
