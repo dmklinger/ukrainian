@@ -227,9 +227,9 @@ def parse_wiktionary_table(w, inflections):
 
 	def parse_pronoun(word):
 		nom = ['я', 'ти', 'він', 'воно́', 'вона́', 'ми', 'ви', 'вони́']
-		gen = ['мене́', 'тебе́', 'його́, ньо́го', 'його́, ньо́го*', 'її́, не́ї', 'нас', 'вас', 'їх, них*']
+		gen = ['мене́', 'тебе́', 'його́, ньо́го', 'його́, ньо́го', 'її́, не́ї', 'нас', 'вас', 'їх, них*']
 		dat = ['мені́', 'тобі́', 'йому́', 'йому́', 'їй', 'нам', 'вам', 'їм']
-		acc = ['мене́', 'тебе́', 'його́, ньо́го', 'його́, ньо́го*', 'її́, не́ї', 'нас', 'вас', 'їх, них*']
+		acc = ['мене́', 'тебе́', 'його́, ньо́го', 'його́, ньо́го', 'її́, не́ї', 'нас', 'вас', 'їх, них*']
 		ins = ['мно́ю', 'тобо́ю', 'ним', 'ним', 'не́ю', 'на́ми', 'ва́ми', 'ни́ми']
 		loc = ['мені́', 'тобі́', 'ньо́му, нім', 'ньо́му, нім', 'ній', 'нас', 'вас', 'них']
 		index = {e.replace('́', ''): i for i, e in enumerate(nom)}
@@ -542,7 +542,7 @@ def get_inflection(word, use_cache=True):
 					del forms[form_id]
 			for form_id in forms:
 				form = forms[form_id]
-				forms[form_id] = [x.replace('*', '').strip() for x in form.split(',')]
+				forms[form_id] = [x.strip() for x in form.split(',')]
 				forms[form_id] = [' '.join(x.split()[-1 * word_len:]) for x in forms[form_id]]
 			return (found_word, word_info, forms, form_type)
 		return res
@@ -591,7 +591,7 @@ def get_frequency_list():
 				x[1]  # word
 			][
 				parts_of_speech[x[2]]  # part of speech
-			] = x[0]  # rank
+			] = int(x[0])  # rank
 		with open(f'data/frequencies.json', 'w+', encoding='utf-8') as f:
 			f.write(json.dumps(frequency_dict, indent=2, ensure_ascii=False))
 	return data

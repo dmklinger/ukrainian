@@ -1,4 +1,5 @@
 import json
+import re
 from copy import deepcopy
 from collections import defaultdict
 
@@ -36,7 +37,24 @@ class Forms:
 		for form_id in self.forms:
 			form_list = self.forms[form_id]
 			new_form_list = {form: None for form in form_list}
-			self.forms[form_id] = [x for x in new_form_list]	
+			self.forms[form_id] = [x.replace('*', '') for x in new_form_list]	
+
+	def get_final_forms(self):
+		if self.form_type != 'verb':
+			return self.forms
+		else:
+			new_forms = defaultdict(lambda: defaultdict(lambda: {}))
+			for form in [x for x in self.forms if x != 'inf']:
+				info = form.split(' ')
+				if len(info) == 2:
+					new_forms[info[0]][info[1]] = self.forms[form]
+				elif len(info) == 3:
+					new_forms[info[0]]['pp'][info[1]] = self.forms[form]
+			new_forms['inf'] = self.forms['inf']
+			for form in new_forms:
+				if isinstance(new_forms[form], defaultdict):
+					new_forms[form] = dict(new_forms[form])
+			return new_forms
 
 
 class Usage:
@@ -152,7 +170,7 @@ class Usage:
 		if len(new_info) > 0:
 			new_info = ", ".join(new_info)
 		else:
-			new_info = None
+			new_info = ""
 		return new_info
 
 	def add_forms(self, forms, form_type):
@@ -172,12 +190,14 @@ class Usage:
 
 		added_flag = False
 		new_usages = []
+		self.delete_me = True
 		for found_word, word_info, forms, form_type in results:
 			if found_word and self.pos and self.pos in word_info:  
 				if self.word == found_word: # perfect match!
 					self.add_info(word_info)
 					self.add_forms(forms, form_type)
 					added_flag = True
+					self.delete_me = False
 				else:
 					this_inflection = get_inflection_positions(self.word) 
 					found_inflection = get_inflection_positions(found_word)
@@ -188,8 +208,8 @@ class Usage:
 						new_usage.add_info(word_info)
 						new_usage.add_forms(forms, form_type)
 						new_usages.append(new_usage)
-						self.delete_me = True
 						added_flag = True
+
 			elif force:
 				if self.word == found_word:
 					if self.pos in ('noun', 'verb', 'adjective') and self.pos != form_type:
@@ -199,10 +219,12 @@ class Usage:
 						new_usage.add_info(word_info)
 						new_usage.add_forms(forms, form_type)
 						new_usages.append(new_usage)
-						self.delete_me = True
 					else:
 						self.add_info(word_info)
 						self.add_forms(forms, form_type)
+						self.delete_me = False
+				elif self.pos not in ('noun', 'verb', 'adjective'):
+					self.delete_me = False
 		return not added_flag and len(self.forms) == 0, new_usages
 
 	def get_definitions(self, accept_alerts=True):
@@ -214,10 +236,13 @@ class Usage:
 				result.append(d)
 		return result
 
-	def get_forms(self):
+	def get_forms(self, final_forms=False):
 		results = {}
-		for forms in self.forms.values():
-			results = {**results, **forms.forms}
+		for form_id in self.forms:
+			forms = self.forms[form_id].forms
+			if final_forms:
+				forms = self.forms[form_id].get_final_forms()
+			results = {**results, **forms}
 		return results
 
 	def merge(self, other, accept_alerts=True):
@@ -242,12 +267,12 @@ class Usage:
 			else:
 				self.forms[ft] = forms
 
-	def get_dict(self):
+	def get_dict(self, final_forms=False):
 		return {
 			'defs': self.get_definitions(),
 			'freq': self.frequency,
 			'info': self.get_info(),
-			'forms': self.get_forms()
+			'forms': self.get_forms(final_forms)
 		}
 
 
@@ -342,7 +367,7 @@ class Word:
 	def garbage_collect(self):
 		for pos in list(self.usages.keys()):
 			usage = self.usages[pos]
-			if len(usage.definitions.keys()) == 0 or usage.delete_me:
+			if len(usage.definitions.keys()) == 0 or usage.delete_me or pos in ('suffix', 'prefix'):
 				del self.usages[pos]
 
 	def add_frequencies(self, frequencies):
@@ -377,6 +402,34 @@ class Word:
 				_, nu = usage.add_inflection(results, force=True)
 				new_usages += nu
 		return new_usages
+
+	def get_final_form(self):
+		results = []
+		for pos, usage in self.usages.items():
+			result = {'word': self.word, 'pos': pos}
+			result = {**result, **usage.get_dict(final_forms=True)}
+			results.append(result)
+		return results
+
+	def get_definition_words(self):
+		results = []
+		for _, usages in self.usages.items():
+			for d in usages.get_definitions():
+				d = d.replace('́', '')
+				d = re.sub(r"\([^()]*\)", "", d)
+				d = re.sub(r"[^A-Za-z']+", ' ', d).split()
+				results += d
+		return results
+
+	def get_form_words(self):
+		results = []
+		for _, usages in self.usages.items():
+			for forms in usages.get_forms().values():
+				for f in forms:
+					f = f.replace('́', '')
+					f = re.sub(r"[^\w']+", ' ', f).split()
+					results += f
+		return results
 
 	def get_dict(self):
 		dict = {}
@@ -480,7 +533,7 @@ class Dictionary:
 		try:
 			n = len(self.dict.values())
 			for i, word in enumerate(list(self.dict.keys())):
-				if i % 100 == 0:
+				if i % 1000 == 0:
 					print(f"{i} of {n}")
 				w = self.dict[word]
 				results = extract.get_inflection(w)
@@ -500,13 +553,62 @@ class Dictionary:
 			dict[k] = v.get_dict()
 		return dict
 
-	def dump(self, loc, indent=None):
+	def get_final_forms(self):
+		result = []
+		for word in self.dict:
+			result += self.dict[word].get_final_form()
+
+		max_freq = max([x['freq'] if x['freq'] else -1 for x in result])
+		result = sorted(
+			result, 
+			key=lambda x: (
+				x['freq'] if x['freq'] is not None else max_freq + 1, 
+				len(x['word']), 
+				x['word']
+			)
+		)
+		return result
+
+	def make_index(self, loc, indent=None):
+		data = self.get_final_forms()
+		word_index = defaultdict(lambda: defaultdict(lambda: set()))
+		for i, d in enumerate(data):
+			word = self.dict[d['word']]
+			def_words = word.get_definition_words()
+			form_words = word.get_form_words()
+			for d in def_words:
+				d = d.lower()
+				word_index[d[0]][d].add(i)
+			for f in form_words:
+				f = f.lower()
+				word_index[f[0]][f].add(i)
+
+		for i in word_index:
+			for j in word_index[i]:
+				word_index[i][j] = list(word_index[i][j])
+
 		with open(f'data/{loc}', 'w+', encoding='utf-8') as f:
 			if indent:
 				f.write(
-					json.dumps(self.get_dict(), indent=indent, ensure_ascii=False)
+					json.dumps(word_index, indent=indent, ensure_ascii=False)
 				)
 			else:
 				f.write(
-					json.dumps(self.get_dict(), ensure_ascii=False)
+					json.dumps(word_index, ensure_ascii=False)
+				)
+
+	def dump(self, loc, indent=None, final_form=False):
+		if final_form:
+			data = self.get_final_forms()
+		else:
+			data = self.get_dict()
+
+		with open(f'data/{loc}', 'w+', encoding='utf-8') as f:
+			if indent:
+				f.write(
+					json.dumps(data, indent=indent, ensure_ascii=False)
+				)
+			else:
+				f.write(
+					json.dumps(data, ensure_ascii=False)
 				)
