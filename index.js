@@ -272,6 +272,7 @@ var main = (data) => {
 				}
 			}
 		});
+	window.scrollTo({top:0})
 }
 
 let numDisplayed = 300
