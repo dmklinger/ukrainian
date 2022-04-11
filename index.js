@@ -1,5 +1,7 @@
 'use strict';
 
+console.log(window.innerWidth)
+
 var main = (data, increase) => {
 	let tr = d3.select(".main")
 		.selectAll('.row')

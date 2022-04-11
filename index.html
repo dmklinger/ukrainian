@@ -10,14 +10,14 @@
 	</head>
 	<body>
 		<div class ="topBar">
-			<div>
+			<div id="titleDiv">
 				<div><img src = 'favicon.ico'></div>
 				<div>
 					<p><b>Dictionary of the Ukrainian Language</b></p>
 				</div>
 				<div><img src = 'favicon.ico'></div>
 			</div>
-			<div>
+			<div id="toolbarDiv">
 				<div>
 					<p style="font-size: 14px">Sort: <select id="sort" onchange="select();">
 						<option value="freq">By Frequency</option>
@@ -41,7 +41,7 @@
 					</select>
 				</div>
 				<div>
-					<input type="text" placeholder="Search for a word" size="30" id="search">
+					<input type="text" placeholder="Search for a word" size="15" id="search">
 					<button onclick="search();">Go</button>
 				</div>
 				<div>
