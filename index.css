@@ -13,6 +13,10 @@ body {
 		grid-gap: 1px;
 		font-size: 14px;
 	}
+
+	.title {
+		font-size: 16px;
+	}
 	
 	.col {
 		padding: 10px;
@@ -39,6 +43,10 @@ body {
 		font-size: 10px;
 	}
 
+	.title {
+		font-size: 12px;
+	}
+
 	#header {
 		visibility: hidden;
 	}
@@ -48,11 +56,11 @@ body {
 	}
 
 	#forms {
-		padding-bottom: 30px;
+		padding-bottom: 15px;
 	}
 
 	#def {
-		padding-top: 20px;
+		padding-top: 15px;
 	}
 
 	#def > div {
@@ -76,7 +84,7 @@ body {
 	}
 
 	.row {
-		font-size: 12px;
+		font-size: 10px;
 	}
 	
 }
@@ -114,7 +122,6 @@ body {
 img {
 	height: 30px
 }
-
 
 .topBar > div {
 	padding-left: 10px;
@@ -212,7 +219,6 @@ td {
 .title {
 	margin-left: auto;
 	margin-right: auto;
-	font-size: 16px;
 }
 
 #forms > * {
