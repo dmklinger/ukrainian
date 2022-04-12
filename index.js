@@ -300,6 +300,13 @@ var main = (data, increase) => {
 					if (beforeClear && isWordMatch && parenthesis === 0) {
 						buffer += thisLetter;
 						index ++;
+
+						if (index === word.length) {
+							if (!literal || afterClear) result += `<span class=highlight>${buffer}</span>`;
+							else result += buffer;
+							buffer = '';
+							index = 0;
+						}
 					}
 					else result += thisLetter;
 				}
