@@ -293,7 +293,7 @@ var main = (data, increase) => {
 				const beforeClear = isBeginning || !letters.includes(phrase[i-1].toLowerCase());
 				const afterClear = isEnd || !letters.includes(phrase[i + 1].toLowerCase());
 
-				const isWordMatch = thisLetter === word[index];
+				const isWordMatch = thisLetter.toLowerCase() === word[index];
 				const isAccent = thisLetter === "́";
 			
 				if (index === 0) {
@@ -511,7 +511,16 @@ function searchHelper() {
 				allData,
 				x => d3.filter(
 					x.defs, 
-					y => y.toLowerCase().includes(literalRes) 
+					y => {
+						let noParen = ''
+						let paren = 0
+						for (const l of y) {
+							if (l === '(') paren++;
+							else if (l === ')') paren--;
+							else if (paren === 0) noParen += l;
+						}
+						return noParen.toLowerCase().includes(literalRes)
+					} 
 				).length > 0 || x.word === literalRes
 			).map(x => x.index)
 			
