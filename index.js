@@ -297,7 +297,7 @@ var main = (data, increase) => {
 				const isAccent = thisLetter === "́";
 			
 				if (index === 0) {
-					if (beforeClear && isWordMatch) {
+					if (beforeClear && isWordMatch && parenthesis === 0) {
 						buffer += thisLetter;
 						index ++;
 					}
@@ -305,7 +305,7 @@ var main = (data, increase) => {
 				}
 				else if (isWordMatch || isAccent) {
 					buffer += thisLetter;
-					index ++;
+					if (!isAccent || (isAccent && isWordMatch)) index ++;
 					if (index === word.length) {
 						if (!literal || afterClear) result += `<span class=highlight>${buffer}</span>`;
 						else result += buffer;
@@ -441,8 +441,7 @@ window.addEventListener("keydown", event => {
 		document.querySelector('input#search').focus();
     }
 	if (event.code === 'Escape') {
-		document.querySelector('input#search').value = ""
-		search();
+		clear();
 	}
 })
 
@@ -540,8 +539,13 @@ function filter() {
 }
 
 function search() {
+	const letters = "abcdefghijklmnopqrstuvwxyzабвгдежзийклмнопрстуфхцчшщъыьэюяєії '\""
 	const oldSearch = searchTerm;
 	searchTerm = document.querySelector('input#search').value.toLowerCase();
+	let newSearchTerm = ''
+	for (const s of searchTerm) { if (letters.includes(s)) newSearchTerm += s; }
+	console.log(newSearchTerm)
+	searchTerm = newSearchTerm;
 	if (oldSearch) {
 		selectHelper();
 		filterHelper();
@@ -549,3 +553,10 @@ function search() {
 	searchHelper();
 	main(data.slice(0, numDisplayed))
 }
+
+function clear() {
+	document.querySelector('input#search').value = ""
+	search();
+}
+
+d3.select('#clear').on('click', clear)
