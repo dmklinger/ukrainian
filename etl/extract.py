@@ -588,11 +588,12 @@ def get_frequency_list():
 			f.encoding = 'utf-8'
 			data = [row.split(';')[0:3] for row in f.text.split('\n')[1:-1]]
 		for x in data:
-			frequency_dict[
-				x[1]  # word
-			][
-				parts_of_speech[x[2]]  # part of speech
-			] = int(x[0])  # rank
+			if (x[1], parts_of_speech[x[2]]) != ('йога', 'noun'):  # why the hell is this so high
+				frequency_dict[
+					x[1]  # word
+				][
+					parts_of_speech[x[2]]  # part of speech
+				] = int(x[0])  # rank
 		with open(f'data/frequencies.json', 'w+', encoding='utf-8') as f:
 			f.write(json.dumps(frequency_dict, indent=2, ensure_ascii=False))
 	return data

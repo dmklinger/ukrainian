@@ -319,6 +319,7 @@ var main = (data, increase) => {
 					result += thisLetter;
 				}
 			}
+			result += buffer;
 			return result
 		}
 		if (literalPhrases || fuzzyWords) {
