@@ -52,7 +52,7 @@ body {
 	}
 
 	.title {
-		font-size: 12px;
+		font-size: 14px;
 	}
 
 	#header {
@@ -69,6 +69,7 @@ body {
 
 	#def {
 		padding-top: 15px;
+		font-size: 12px;
 	}
 
 	#def > div {
