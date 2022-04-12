@@ -13,6 +13,10 @@ body {
 		grid-gap: 1px;
 		font-size: 14px;
 	}
+	
+	.topBar > div > div {
+		padding: 4px;
+	}
 
 	.title {
 		font-size: 16px;
@@ -78,10 +82,16 @@ body {
 	}
 
 	#toolbarDiv {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		grid-template-rows: 1fr 1fr;
+		display: flex;
+		flex-wrap: wrap;
+		padding-top: 4px;
+		padding-bottom: 4px;
 	}
+
+	.topBar > div > div {
+		padding: 2px;
+	}
+
 
 	tr, td, th {
 		padding: 2.5px 5px;
@@ -136,10 +146,6 @@ body {
 	margin-top: auto;
 	margin-bottom: auto;
 	align-items: center;
-}
-
-.topBar > div > div {
-	padding: 4px;
 }
 
 img {
