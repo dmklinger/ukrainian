@@ -440,7 +440,16 @@ class Word:
 		for _, usages in self.usages.items():
 			for d in usages.get_definitions():
 				d = d.replace('́', '')
-				d = re.sub(r"\(.*\)", "", d)
+				new_d = ''
+				parenthesis = 0
+				for l in d:
+					if l == '(':
+						parenthesis += 1
+					elif l == ')':
+						parenthesis -= 1
+					elif parenthesis == 0:
+						new_d += l
+				d = new_d 
 				d = re.sub(r"[^A-Za-z']+", ' ', d).split()
 				results += d
 		return results

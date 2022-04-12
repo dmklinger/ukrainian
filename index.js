@@ -278,60 +278,44 @@ var main = (data, increase) => {
 
 		const find = (word, phrase, literal) => {
 			const letters = 'abcdefghijklmnopqrstuvwxyzабвгдежзийклмнопрстуфхцчшщъыьэюяєії'
-			let startIndex = -1;
+			let index = 0;
 			let parenthesis = 0;
 			let result = ''
 			let buffer = ''
 			for (let i = 0; i < phrase.length; i++) {
-				const thisLetter = phrase[i]
+				const thisLetter = phrase[i];
+
 				if (thisLetter === ')') { parenthesis++; };
 				if (thisLetter === '(') { parenthesis--; };
-				if (
-					startIndex === -1 && 
-					(i === 0 || !letters.includes(phrase[i - 1].toLowerCase()))
-					&& parenthesis === 0
-					&& thisLetter.toLowerCase() === word[0].toLowerCase()
-				) {
-					startIndex = 0;
-					buffer += thisLetter;
-					if (word.length == 1) {
-						if (!literal || i === phrase.length - 1 || !letters.includes(phrase[i + 1].toLowerCase())) {
-							result += `<span class=highlight>${buffer}</span>`;
-							startIndex = -1;
-							buffer = ''
-						} else {
-							result += buffer;
-							startIndex = -1;
-							buffer = ''
-						}
-					}
-				} else if (startIndex > -1) {
-					if (thisLetter === "́") {
+
+				const isBeginning = i === 0;
+				const isEnd = i === phrase.length - 1;
+				const beforeClear = isBeginning || !letters.includes(phrase[i-1].toLowerCase());
+				const afterClear = isEnd || !letters.includes(phrase[i + 1].toLowerCase());
+
+				const isWordMatch = thisLetter === word[index];
+				const isAccent = thisLetter === "́";
+			
+				if (index === 0) {
+					if (beforeClear && isWordMatch) {
 						buffer += thisLetter;
+						index ++;
 					}
-					else {
-						startIndex ++;
-						if (startIndex <= word.length - 1 && thisLetter.toLowerCase() === word[startIndex].toLowerCase()) {
-							buffer += thisLetter;
-						} else {
-							result += buffer;
-							buffer = ''
-							startIndex = -1;
-							result += thisLetter;
-						} 
-						if (startIndex === word.length - 1) {
-							if (literal) {
-								if (i === phrase.length - 1 || !letters.includes(phrase[i + 1].toLowerCase())) {
-									result += `<span class=highlight>${buffer}</span>`
-								} else {
-									result += buffer
-								}
-							} else { result += `<span class=highlight>${buffer}</span>` }
-							buffer = ''
-							startIndex = -1
-						}
+					else result += thisLetter;
+				}
+				else if (isWordMatch || isAccent) {
+					buffer += thisLetter;
+					index ++;
+					if (index === word.length) {
+						if (!literal || afterClear) result += `<span class=highlight>${buffer}</span>`;
+						else result += buffer;
+						buffer = '';
+						index = 0;
 					}
 				} else {
+					result += buffer;
+					buffer = '';
+					index = 0;
 					result += thisLetter;
 				}
 			}
