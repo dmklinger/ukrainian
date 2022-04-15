@@ -591,8 +591,8 @@ function searchHelper() {
 			let goodData = d3.filter(
 				allData,
 				x => (
-					d3.filter(x.defs, filterFunc) + d3.filter(unpack(x.forms), y => { return y === literalRes; } )
-				).length > 0 || x.word === literalRes
+					d3.filter(x.defs, filterFunc) + d3.filter(unpack(x.forms), y => { return y.replaceAll('\u0301', '') === literalRes; } )
+				).length > 0 || x.word.replaceAll('\u0301', '') === literalRes
 			).map(x => x.index)
 			
 			const _indexes = d3.filter(Array.from(indexes), x => goodData.includes(x))
