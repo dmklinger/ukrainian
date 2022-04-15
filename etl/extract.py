@@ -175,7 +175,7 @@ def parse_wiktionary_table(w, inflections):
 					person = t
 				if t in ('s', 'p'):
 					number = t
-				if t in ('impers', 'act', 'pass', 'adv'):
+				if t in ('impers', 'act', 'pass', 'adv') and participle is None:
 					participle = {'impers': 'imp', 'act': 'act', 'pass': 'pas', 'adv': 'adv'}[t]
 			if tense == 'inf':
 				form = tense
