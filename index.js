@@ -1,7 +1,5 @@
 'use strict';
 
-console.log(window.innerWidth)
-
 var main = (data, increase) => {
 	let tr = d3.select(".main")
 		.selectAll('.row')
@@ -290,7 +288,7 @@ var main = (data, increase) => {
 
 				const isBeginning = i === 0;
 				const isEnd = i === phrase.length - 1;
-				const beforeClear = isBeginning || !letters.includes(phrase[i-1].toLowerCase());
+				const beforeClear = isBeginning || !letters.includes(phrase[i - 1].toLowerCase());
 				const afterClear = isEnd || !letters.includes(phrase[i + 1].toLowerCase());
 
 				const isWordMatch = thisLetter.toLowerCase() === word[index];
@@ -313,7 +311,7 @@ var main = (data, increase) => {
 				else if (isWordMatch || isAccent) {
 					buffer += thisLetter;
 					if (!isAccent || (isAccent && isWordMatch)) index ++;
-					if (index === word.length) {
+					if (index === word.length && (isEnd || phrase[i + 1] !== "́")) {
 						if (!literal || afterClear) result += `<span class=highlight>${buffer}</span>`;
 						else result += buffer;
 						buffer = '';
@@ -532,6 +530,7 @@ function searchHelper() {
 				indexes = _indexes;
 			}
 		}
+		console.log(literalWords)
 		for (const word of literalWords) {
 			if (!word) break;
 			// generate words containing all searched letters
@@ -563,24 +562,36 @@ function searchHelper() {
 				indexes = _indexes;
 			}
 		}
-		console.log(1, indexes)
 		// ensure actual phrase is included
 		for (const literalRes of literalPhrases) {
 			let allData = d3.filter(data, x => indexes.has(x.index))
+
+			const filterFunc = (y) => {
+				let noParen = ''
+				let paren = 0
+				for (const l of y) {
+					if (l === '(') paren++;
+					else if (l === ')') paren--;
+					else if (paren === 0) noParen += l;
+				}
+				return noParen.toLowerCase().includes(literalRes)
+			} 
+
+			const unpack = (y) => {
+				let result = []
+				if (typeof y === 'object' && y !== null) {
+					for (const x of Object.values(y)) result = result.concat(unpack(x));
+				}
+				else {
+					result = y;
+				}
+				return result;
+			}
+
 			let goodData = d3.filter(
 				allData,
-				x => d3.filter(
-					x.defs, 
-					y => {
-						let noParen = ''
-						let paren = 0
-						for (const l of y) {
-							if (l === '(') paren++;
-							else if (l === ')') paren--;
-							else if (paren === 0) noParen += l;
-						}
-						return noParen.toLowerCase().includes(literalRes)
-					} 
+				x => (
+					d3.filter(x.defs, filterFunc) + d3.filter(unpack(x.forms), y => { return y === literalRes; } )
 				).length > 0 || x.word === literalRes
 			).map(x => x.index)
 			
@@ -588,7 +599,6 @@ function searchHelper() {
 			indexes = new Set();
 			for (const elem of _indexes) { indexes.add(elem); }
 		}
-		console.log(2, indexes)
 		if (indexes) {
 			numDisplayed = 300;
 			data = d3.filter(data, x => indexes.has(x.index))
@@ -617,7 +627,6 @@ function search() {
 	searchTerm = document.querySelector('input#search').value.toLowerCase();
 	let newSearchTerm = ''
 	for (const s of searchTerm) { if (letters.includes(s)) newSearchTerm += s; }
-	console.log(newSearchTerm)
 	searchTerm = newSearchTerm;
 	if (oldSearch) {
 		selectHelper();
