@@ -259,6 +259,33 @@ class Usage:
 			results = {**results, **forms}
 		return results
 
+	def get_definition_words(self):
+		results = []
+		for d in self.get_definitions():
+			d = d.replace('́', '')
+			new_d = ''
+			parenthesis = 0
+			for l in d:
+				if l == '(':
+					parenthesis += 1
+				elif l == ')':
+					parenthesis -= 1
+				elif parenthesis == 0:
+					new_d += l
+			d = new_d 
+			d = re.sub(r"[^A-Za-z']+", ' ', d).strip().split()
+			results += d
+		return results
+
+	def get_form_words(self):
+		results = []
+		for forms in self.get_forms().values():
+			for f in forms:
+				f = f.replace('́', '')
+				f = re.sub(r"[^\w']+", ' ', f).strip().split()
+				results += f
+		return results
+
 	def merge(self, other, accept_alerts=True):
 		new_usage = Usage(self.word, self.pos)
 		these_definitions = self.get_definitions()
@@ -435,35 +462,6 @@ class Word:
 			results.append(result)
 		return results
 
-	def get_definition_words(self):
-		results = []
-		for _, usages in self.usages.items():
-			for d in usages.get_definitions():
-				d = d.replace('́', '')
-				new_d = ''
-				parenthesis = 0
-				for l in d:
-					if l == '(':
-						parenthesis += 1
-					elif l == ')':
-						parenthesis -= 1
-					elif parenthesis == 0:
-						new_d += l
-				d = new_d 
-				d = re.sub(r"[^A-Za-z']+", ' ', d).split()
-				results += d
-		return results
-
-	def get_form_words(self):
-		results = []
-		for _, usages in self.usages.items():
-			for forms in usages.get_forms().values():
-				for f in forms:
-					f = f.replace('́', '')
-					f = re.sub(r"[^\w']+", ' ', f).split()
-					results += f
-		return results + [self.get_word_no_accent()]
-
 	def get_dict(self):
 		dict = {}
 		for k, v in self.usages.items():
@@ -607,21 +605,21 @@ class Dictionary:
 
 	def make_index(self, loc, indent=None):
 		data = self.get_final_forms()
-		word_index = defaultdict(lambda: defaultdict(lambda: set()))
+		word_index = defaultdict(lambda: [])
 		for i, d in enumerate(data):
 			word = self.dict[d['word']]
-			def_words = word.get_definition_words()
-			form_words = word.get_form_words()
+			usage = word.usages[d['pos']]
+			def_words = usage.get_definition_words()
+			form_words = usage.get_form_words() + [word.get_word_no_accent()]
 			for d in def_words:
 				d = d.lower()
-				word_index[d[0]][d].add(i)
+				word_index[d].append(i)
 			for f in form_words:
 				f = f.lower()
-				word_index[f[0]][f].add(i)
+				word_index[f].append(i)
 
 		for i in word_index:
-			for j in word_index[i]:
-				word_index[i][j] = list(word_index[i][j])
+			word_index[i] = list(set(word_index[i]))
 
 		with open(f'data/{loc}', 'w+', encoding='utf-8') as f:
 			if indent:

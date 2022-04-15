@@ -276,7 +276,7 @@ var main = (data, increase) => {
 
 	const highlightFunc = (t) => {
 
-		const find = (word, phrase, literal) => {
+		const find = (word, phrase, literal, mustPreceed) => {
 			const letters = 'abcdefghijklmnopqrstuvwxyzабвгдежзийклмнопрстуфхцчшщъыьэюяєії'
 			let index = 0;
 			let parenthesis = 0;
@@ -297,7 +297,7 @@ var main = (data, increase) => {
 				const isAccent = thisLetter === "́";
 			
 				if (index === 0) {
-					if (beforeClear && isWordMatch && parenthesis === 0) {
+					if (((!literal && !mustPreceed) || beforeClear) && isWordMatch && parenthesis === 0) {
 						buffer += thisLetter;
 						index ++;
 
@@ -331,11 +331,12 @@ var main = (data, increase) => {
 		}
 		if (literalPhrases || fuzzyWords) {
 			let ret_val = t
+			const mustPreceed = !(fuzzyWords.length === 1 && fuzzyWords[0].replace(/[^a-z]/g, '').length === 0);
 			for (const phrase of literalPhrases) {
-				ret_val = find(phrase, ret_val, true)
+				ret_val = find(phrase, ret_val, true, null)
 			}
 			for (const word of fuzzyWords) {
-				ret_val = find(word, ret_val, false)
+				ret_val = find(word, ret_val, false, mustPreceed)
 			}
 			return ret_val; 
 		}
@@ -485,29 +486,34 @@ function searchHelper() {
 			fuzzyWords.push(fuzzyRes);
 		}
 		let indexes;
+		const canInclude = fuzzyWords.length === 1 && fuzzyWords[0].replace(/[^a-z]/g, '').length === 0;
 		for (let word of fuzzyWords) {
 			if (!word) break;
 			if (!indexes) {
-				let results = d3.filter(Object.keys(index[word[0]]), x => x.startsWith(word) || x === word);
+				let results = d3.filter(Object.keys(index), x => {
+					return canInclude ? x.includes(word) : (x.startsWith(word) || x === word)
+				});
 				indexes = []
-				for (const res of results) { indexes = indexes.concat(index[res[0]][res])}
+				for (const res of results) { indexes = indexes.concat(index[res])}
 			} else {
-				let results = d3.filter(Object.keys(index[word[0]]), x => x.startsWith(word) || x === word);
+				let results = d3.filter(Object.keys(index), x => {
+					return canInclude ? x.includes(word) : (x.startsWith(word) || x === word)
+				});
 				let theseIndexes = []
-				for (const res of results) { theseIndexes = theseIndexes.concat(index[res[0]][res])}
+				for (const res of results) { theseIndexes = theseIndexes.concat(index[res])}
 				indexes = d3.filter(indexes, x => theseIndexes.includes(x))
 			}
 		}
 		for (let word of literalWords) {
 			if (!word) break;
 			if (!indexes) {
-				let results = d3.filter(Object.keys(index[word[0]]), x => x === word);
+				let results = d3.filter(Object.keys(index), x => x === word);
 				indexes = []
-				for (const res of results) { indexes = indexes.concat(index[res[0]][res])}
+				for (const res of results) { indexes = indexes.concat(index[res])}
 			} else {
-				let results = d3.filter(Object.keys(index[word[0]]), x => x === word);
+				let results = d3.filter(Object.keys(index), x => x === word);
 				let theseIndexes = []
-				for (const res of results) { theseIndexes = theseIndexes.concat(index[res[0]][res])}
+				for (const res of results) { theseIndexes = theseIndexes.concat(index[res])}
 				indexes = d3.filter(indexes, x => theseIndexes.includes(x))
 			}
 		}
