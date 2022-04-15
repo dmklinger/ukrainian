@@ -359,7 +359,8 @@ let freq_data;
 let alpha_data;
 let curFilter;
 let sortInfo = 'freq';
-let index;
+let index = new Object();
+let wordDict = new Object();
 let searchTerm;
 let literalPhrases;
 let fuzzyWords;
@@ -374,7 +375,20 @@ document.addEventListener('copy', (event) => {
 
 fetch('index.json')
 	.then(res => res.json() )
-	.then(out => { index = out; })
+	.then(out => { 
+		console.log('starting index.json')
+		for (const o of Object.keys(out)) index[o] = {'word': out[o][0], 'indexes': new Set(out[o][1])};
+		console.log('done with index.json') 
+	})
+	.catch(err => {throw err; });
+
+fetch('word_dict.json')
+	.then(res => res.json() )
+	.then(out => { 
+		console.log('starting word_dict.json')
+		for (const o of Object.keys(out)) wordDict[o] = new Set(out[o]); 
+		console.log('done with word_dict.json')
+	})
 	.catch(err => {throw err; });
 
 fetch('words.json')
@@ -471,7 +485,7 @@ function filterHelper() {
 function searchHelper() {
 	literalPhrases = null
 	fuzzyWords = null
-	if (index && searchTerm) {
+	if (index && wordDict && searchTerm) {
 		searchTerm = searchTerm.trim().replaceAll(/\s+/g, ' ').toLowerCase()
 		const literalResults = searchTerm.matchAll(/"([^"]*)"/g)
 		literalPhrases = Array()
@@ -487,39 +501,72 @@ function searchHelper() {
 		}
 		let indexes;
 		const canInclude = fuzzyWords.length === 1 && fuzzyWords[0].replace(/[^a-z]/g, '').length === 0;
-		for (let word of fuzzyWords) {
+		for (const word of fuzzyWords) {
 			if (!word) break;
+			// generate words containing all searched letters
+			let wordIndexes;
+			for (const l of new Set(word)) {
+				if (!wordIndexes) wordIndexes = wordDict[l];
+				else {
+					let _wordIndexes = new Set();
+					for (const elem of wordDict[l]) { wordIndexes.has(elem) ? _wordIndexes.add(elem) : null }
+					wordIndexes = _wordIndexes;
+				}
+			}
 			if (!indexes) {
-				let results = d3.filter(Object.keys(index), x => {
-					return canInclude ? x.includes(word) : (x.startsWith(word) || x === word)
+				let results = d3.filter(Array.from(wordIndexes), x => {
+					const thisWord = index[x]['word']
+					return canInclude ? thisWord.includes(word) : (thisWord.startsWith(word) || thisWord === word)
 				});
-				indexes = []
-				for (const res of results) { indexes = indexes.concat(index[res])}
+				indexes = new Set()
+				for (const res of results) { for (const elem of index[res]['indexes']) indexes.add(elem); }
 			} else {
-				let results = d3.filter(Object.keys(index), x => {
-					return canInclude ? x.includes(word) : (x.startsWith(word) || x === word)
+				let results = d3.filter(Array.from(wordIndexes), x => {
+					const thisWord = index[x]['word']
+					return canInclude ? thisWord.includes(word) : (thisWord.startsWith(word) || thisWord === word)
 				});
-				let theseIndexes = []
-				for (const res of results) { theseIndexes = theseIndexes.concat(index[res])}
-				indexes = d3.filter(indexes, x => theseIndexes.includes(x))
+				let _indexes = new Set()
+				for (const res of results) { 
+					for (const elem of index[res]['indexes']) indexes.has(elem) ? _indexes.add(elem) : null; 
+				}
+				indexes = _indexes;
 			}
 		}
-		for (let word of literalWords) {
+		for (const word of literalWords) {
 			if (!word) break;
+			// generate words containing all searched letters
+			let wordIndexes;
+			for (const l of new Set(word)) {
+				if (!wordIndexes) wordIndexes = wordDict[l];
+				else {
+					let _wordIndexes = new Set();
+					for (const elem of wordDict[l]) { wordIndexes.has(elem) ? _wordIndexes.add(elem) : null }
+					wordIndexes = _wordIndexes;
+				}
+			}
 			if (!indexes) {
-				let results = d3.filter(Object.keys(index), x => x === word);
-				indexes = []
-				for (const res of results) { indexes = indexes.concat(index[res])}
+				let results = d3.filter(Array.from(wordIndexes), x => {
+					const thisWord = index[x]['word']
+					return thisWord === word
+				});
+				indexes = new Set()
+				for (const res of results) { for (const elem of index[res]['indexes']) indexes.add(elem); }
 			} else {
-				let results = d3.filter(Object.keys(index), x => x === word);
-				let theseIndexes = []
-				for (const res of results) { theseIndexes = theseIndexes.concat(index[res])}
-				indexes = d3.filter(indexes, x => theseIndexes.includes(x))
+				let results = d3.filter(Array.from(wordIndexes), x => {
+					const thisWord = index[x]['word']
+					return thisWord === word
+				});
+				let _indexes = new Set()
+				for (const res of results) { 
+					for (const elem of index[res]['indexes']) indexes.has(elem) ? _indexes.add(elem) : null; 
+				}
+				indexes = _indexes;
 			}
 		}
+		console.log(1, indexes)
 		// ensure actual phrase is included
-		for (let literalRes of literalPhrases) {
-			let allData = d3.filter(data, x => indexes.includes(x.index))
+		for (const literalRes of literalPhrases) {
+			let allData = d3.filter(data, x => indexes.has(x.index))
 			let goodData = d3.filter(
 				allData,
 				x => d3.filter(
@@ -537,11 +584,14 @@ function searchHelper() {
 				).length > 0 || x.word === literalRes
 			).map(x => x.index)
 			
-			indexes = d3.filter(indexes, x => goodData.includes(x))
+			const _indexes = d3.filter(Array.from(indexes), x => goodData.includes(x))
+			indexes = new Set();
+			for (const elem of _indexes) { indexes.add(elem); }
 		}
+		console.log(2, indexes)
 		if (indexes) {
 			numDisplayed = 300;
-			data = d3.filter(data, x => indexes.includes(x.index))
+			data = d3.filter(data, x => indexes.has(x.index))
 		}
 	}
 }

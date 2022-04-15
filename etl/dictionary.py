@@ -603,9 +603,9 @@ class Dictionary:
 			r['index'] = i
 		return result
 
-	def make_index(self, loc, indent=None):
+	def make_index(self, loc1, loc2, indent=None):
 		data = self.get_final_forms()
-		word_index = defaultdict(lambda: [])
+		word_index = defaultdict(lambda: set())
 		for i, d in enumerate(data):
 			word = self.dict[d['word']]
 			usage = word.usages[d['pos']]
@@ -613,22 +613,38 @@ class Dictionary:
 			form_words = usage.get_form_words() + [word.get_word_no_accent()]
 			for d in def_words:
 				d = d.lower()
-				word_index[d].append(i)
+				word_index[d].add(i)
 			for f in form_words:
 				f = f.lower()
-				word_index[f].append(i)
+				word_index[f].add(i)
 
-		for i in word_index:
-			word_index[i] = list(set(word_index[i]))
+		word_index_list = {}
+		word_part = defaultdict(lambda: set())
+		for i, word in enumerate(list(word_index.keys())):
+			word_index_list[i] = [word, list(word_index[word])]
+			for l in word:
+				word_part[l].add(i)
+		for i in word_part:
+			word_part[i] = list(word_part[i])
 
-		with open(f'data/{loc}', 'w+', encoding='utf-8') as f:
+		with open(f'data/{loc1}', 'w+', encoding='utf-8') as f:
 			if indent:
 				f.write(
-					json.dumps(word_index, indent=indent, ensure_ascii=False)
+					json.dumps(word_index_list, indent=indent, ensure_ascii=False)
 				)
 			else:
 				f.write(
-					json.dumps(word_index, ensure_ascii=False)
+					json.dumps(word_index_list, ensure_ascii=False)
+				)
+
+		with open(f'data/{loc2}', 'w+', encoding='utf-8') as f:
+			if indent:
+				f.write(
+					json.dumps(word_part, indent=indent, ensure_ascii=False)
+				)
+			else:
+				f.write(
+					json.dumps(word_part, ensure_ascii=False)
 				)
 
 	def dump(self, loc, indent=None, final_form=False):
