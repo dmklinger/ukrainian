@@ -138,6 +138,7 @@ def get_wiktionary_word(word, use_cache=True):
 			d = d.rstrip(',.:').strip()
 			if len(d) > 0:
 				w.add_definition(pos, d)
+				w.add_info(Word.replace_pos(pos), word_info)
 			if len(glosses) > 0:
 				for g in glosses:
 					w.add_definition(pos, g)

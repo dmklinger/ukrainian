@@ -307,6 +307,8 @@ class Usage:
 				self.forms[ft].add_forms(forms.forms)
 			else:
 				self.forms[ft] = forms
+		if len(self.info) == 0 and len(other.info) > 0:
+			self.info = other.info
 
 	def get_dict(self, final_forms=False):
 		return {
@@ -435,7 +437,8 @@ class Word:
 				usage.add_frequency(None)
 
 	def add_info(self, pos, word_info):
-		self.usages[pos].add_info(word_info)
+		if pos in self.usages:
+			self.usages[pos].add_info(word_info)
 		
 	def add_forms(self, pos, forms, form_type):
 		self.usages[pos].add_forms(forms, form_type)
