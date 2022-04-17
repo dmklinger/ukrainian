@@ -105,7 +105,7 @@ def get_wiktionary_word(word, use_cache=True):
 		for bs in bad_stuff:
 			bs.decompose()
 		accented_name = word_pointer.text.strip()  # name
-		word_info = word_pointer.find_next('span', {'class': 'gender'})
+		word_info = word_pointer.parent.find('span', {'class': 'gender'})
 		if word_info is not None:
 			word_info = word_info.text.strip()
 		w = Word(accented_name)
