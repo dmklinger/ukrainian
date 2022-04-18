@@ -93,7 +93,16 @@ class Usage:
 		bad_defs = set()
 		for d1 in self.definitions.keys():
 			for d2 in self.definitions.keys():
-				if d1 != d2 and d1.lower() in d2.lower():
+				new_d = ''
+				parenthesis = 0
+				for d in d2:
+					if d == '(':
+						parenthesis += 1
+					if parenthesis == 0:
+						new_d += d
+					if d == ')':
+						parenthesis -= 1
+				if d1 != d2 and d1.lower() in new_d.lower():
 					bad_defs.add(d1)
 		for d in bad_defs:
 			del self.definitions[d]
