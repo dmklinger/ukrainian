@@ -144,7 +144,7 @@ class Usage:
 					matched_word = dictionary.dict[found_word.replace("́", '')]
 				if matched_word:
 					if self.pos in matched_word.usages:
-						self.merge(matched_word.usages[self.pos], accept_alerts=False)
+						self.merge(deepcopy(matched_word.usages[self.pos]), accept_alerts=False)
 					self.add_definition(d)
 				elif len(self.definitions.keys()) == len(self.alerted_definitions.keys()):
 					del self.definitions[d]
