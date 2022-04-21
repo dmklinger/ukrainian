@@ -622,7 +622,7 @@ class Dictionary:
 			word = self.dict[d['word']]
 			usage = word.usages[d['pos']]
 			def_words = usage.get_definition_words()
-			form_words = usage.get_form_words() + [word.get_word_no_accent()]
+			form_words = usage.get_form_words() + re.sub(r"[^\w']+", ' ', word.get_word_no_accent()).strip().split()
 			for d in def_words:
 				d = d.lower()
 				word_index[d].add(i)
