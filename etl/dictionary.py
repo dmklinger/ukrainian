@@ -118,7 +118,7 @@ class Usage:
 					found_word = found_word + x
 				if x in cyrillic + "'" + "́" and initial_index is None:
 					initial_index = i
-			found_word = found_word.strip()
+			found_words = re.sub(r"[^\ẃ]+", ' ', found_word).strip().split()
 			acceptable_forms = [
 				'alternative', 
 				'contraction', 
@@ -137,16 +137,19 @@ class Usage:
 				'('
 			]
 			if sum([1 if af in d.lower() else 0 for af in acceptable_forms]) > 0:
-				matched_word = None
-				if found_word in dictionary.dict:
-					matched_word = dictionary.dict[found_word]
-				elif found_word.replace("́", '') in dictionary.dict:
-					matched_word = dictionary.dict[found_word.replace("́", '')]
-				if matched_word:
-					if self.pos in matched_word.usages:
-						self.merge(deepcopy(matched_word.usages[self.pos]), accept_alerts=False)
-					self.add_definition(d)
-				elif len(self.definitions.keys()) == len(self.alerted_definitions.keys()):
+				nothing_found = True
+				for found_word in found_words:
+					matched_word = None
+					if found_word in dictionary.dict:
+						matched_word = dictionary.dict[found_word]
+					elif found_word.replace("́", '') in dictionary.dict:
+						matched_word = dictionary.dict[found_word.replace("́", '')]
+					if matched_word:
+						if self.pos in matched_word.usages:
+							self.merge(deepcopy(matched_word.usages[self.pos]), accept_alerts=False, use_other_forms=False)
+						self.add_definition(d)
+						nothing_found = False
+				if nothing_found and len(self.definitions.keys()) == len(self.alerted_definitions.keys()):
 					del self.definitions[d]
 					del self.alerted_definitions[d]
 			else:
@@ -295,7 +298,7 @@ class Usage:
 				results += f
 		return results
 
-	def merge(self, other, accept_alerts=True):
+	def merge(self, other, accept_alerts=True, use_other_forms=True):
 		new_usage = Usage(self.word, self.pos)
 		these_definitions = self.get_definitions()
 		other_definitions = other.get_definitions()
@@ -311,13 +314,14 @@ class Usage:
 				new_usage.add_definition(d, alert=d in other.alerted_definitions)
 		self.definitions = new_usage.definitions
 		self.alerted_definitions = new_usage.alerted_definitions
-		for ft, forms in other.forms.items():
-			if ft in self.forms:
-				self.forms[ft].add_forms(forms.forms)
-			else:
-				self.forms[ft] = forms
-		if len(self.info) == 0 and len(other.info) > 0:
-			self.info = other.info
+		if use_other_forms:
+			for ft, forms in other.forms.items():
+				if ft in self.forms:
+					self.forms[ft].add_forms(forms.forms)
+				else:
+					self.forms[ft] = forms
+			if len(self.info) == 0 and len(other.info) > 0:
+				self.info = other.info
 
 	def get_dict(self, final_forms=False):
 		return {
