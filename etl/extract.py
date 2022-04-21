@@ -100,7 +100,7 @@ def get_wiktionary_word(word, use_cache=True):
 	results = []
 
 	word_name = article.find_all('strong', {'class': 'Cyrl headword'}, lang='uk')
-	for word_pointer in word_name:
+	for word_pointer in word_name[::-1]:
 		bad_stuff = word_pointer.find_all(class_='reference')
 		for bs in bad_stuff:
 			bs.decompose()
@@ -156,6 +156,7 @@ def get_wiktionary_word(word, use_cache=True):
 		if table and len(w.usages.keys()) > 0:
 			forms, form_type = parse_wiktionary_table(accented_name, table) 
 			w.add_forms(Word.replace_pos(pos), forms, form_type)
+			table.extract()
 		results.append(w)
 	return results
 
