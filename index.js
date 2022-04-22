@@ -105,6 +105,33 @@ var main = (data, increase) => {
 				.join('p')
 				.text((d) => { return d })	
 		};
+
+		if ('addl' in d) {
+			/* Active, passive, adverbial, impersonal */
+
+			let addls = []
+			for (const addl of ['comp', 'super', 'arg', 'adv']) {
+				if (addl in d['addl']) { addls.push(addl) }
+			}
+			
+			for (const addl of addls) {
+				const addl_tr = table.append('tr')
+				addl_tr.append('th')
+					.attr('id', 'leftLabel')
+					.text({
+						'comp': 'Comp.',
+						'super': 'Super.',
+						'arg': 'Arg.',
+						'adv': 'Adv.'
+					}[addl])
+				addl_tr.append('td')
+					.attr('colspan', 4)
+					.selectAll()
+					.data(gf(d['addl'], addl))
+					.join('p')
+					.text((d) => { return d; })
+			}
+		}
 	}
 
 	let verb_table = (obj, d) => {

@@ -107,7 +107,8 @@ def get_wiktionary_word(word, use_cache=True):
 		accented_name = word_pointer.text.strip()  # name
 		word_info = word_pointer.parent.find('span', {'class': 'gender'})
 		if word_info is not None:
-			word_info = word_info.text.strip()
+			word_info = word_info.extract().text.strip()
+		more_adj_forms = get_additional_adjectival_forms(word_pointer.parent.text)
 		w = Word(accented_name)
 		pos_pointer = word_pointer.find_previous(['h3', 'h4'])
 		pos = pos_pointer.span.text.lower()
@@ -155,9 +156,56 @@ def get_wiktionary_word(word, use_cache=True):
 			table = inflection_pointer.find_next('table', {'class': 'inflection-table inflection inflection-uk inflection-verb'})
 		if table and len(w.usages.keys()) > 0:
 			forms, form_type = parse_wiktionary_table(accented_name, table) 
+			if form_type == 'adj' and more_adj_forms:
+				forms = {**forms, **more_adj_forms}
 			w.add_forms(Word.replace_pos(pos), forms, form_type)
 			table.extract()
 		results.append(w)
+	return results
+
+
+def get_additional_adjectival_forms(text):
+
+	def get_word(word):
+		prefix = ''
+		rest = ''
+		parenthesis = 0
+		for i in word:
+			if i == '(':
+				parenthesis -= 1
+			if parenthesis > 0:
+				prefix += 0
+			elif i not in ('(', ')'):
+				rest += i
+			if i == ')':
+				parenthesis += 1
+		return [rest] if len(prefix) == 0 else [rest, prefix + rest]
+				
+	last_parenthesis = ''
+	parenthesis = 0
+	for i in text[::-1]:
+		if i == '(':
+			parenthesis -= 1
+		if parenthesis > 0:
+			last_parenthesis = i + last_parenthesis
+		if i == ')':
+			parenthesis += 1
+		if parenthesis == 0 and len(last_parenthesis) > 0:
+			break
+	lists = [x.split() for x in last_parenthesis.split(',')]
+	results = {}
+	abbrevs = {
+		'comparative': 'addl comp',
+		'superlative': 'addl super',
+		'argumentative': 'addl arg',
+		'adverb': 'addl adv'
+	}
+	for form in lists:
+		if form[0] in abbrevs.keys():
+			if len(form) == 2:
+				results[abbrevs[form[0]]] = get_word(form[1])
+			elif len(form) == 4:
+				results[abbrevs[form[0]]] = get_word(form[1]) + get_word(form[3])
 	return results
 
 

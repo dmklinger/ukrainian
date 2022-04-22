@@ -52,8 +52,17 @@ class Forms:
 			self.forms[form_id] = new_form_list
 
 	def get_final_forms(self):
-		if self.form_type != 'verb':
+		if self.form_type not in ('verb', 'adj'):
 			return self.forms
+		elif self.form_type == 'adj':
+			new_forms = defaultdict(lambda: {})
+			for form in self.forms:
+				if 'addl' in form:
+					new_forms['addl'][form.split()[1]] = self.forms[form]
+				else:
+					new_forms[form] = self.forms[form]
+			new_forms = dict(new_forms)
+			return new_forms
 		else:
 			new_forms = defaultdict(lambda: defaultdict(lambda: {}))
 			for form in [x for x in self.forms if x != 'inf']:
