@@ -316,10 +316,10 @@ class Usage:
 			new_usage.add_definition(pair[0], alert=pair[0] in self.alerted_definitions)
 			new_usage.add_definition(pair[1], alert=pair[1] in other.alerted_definitions)
 		if len(these_definitions) > len(other_definitions):
-			for d in these_definitions[(len(these_definitions) - min_length):]:
+			for d in these_definitions[-1 * (len(these_definitions) - min_length):]:
 				new_usage.add_definition(d, alert=d in self.alerted_definitions)
 		elif len(other_definitions) > len(these_definitions):
-			for d in other_definitions[(len(other_definitions) - min_length):]:
+			for d in other_definitions[-1 * (len(other_definitions) - min_length):]:
 				new_usage.add_definition(d, alert=d in other.alerted_definitions)
 		self.definitions = new_usage.definitions
 		self.alerted_definitions = new_usage.alerted_definitions
@@ -518,6 +518,7 @@ class Dictionary:
 					if len(self.accentless_words[no_accent]) == 0:
 						self.accentless_words.pop(no_accent)
 					self.dict[to_add.word] = to_add	
+					self.accentless_words[no_accent].add(to_add.word)
 					added_flag = True
 			if not added_flag:  # they are different words
 				self.dict[to_add.word] = to_add
