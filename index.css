@@ -50,11 +50,11 @@ body {
 		grid-template-rows: 0px 0px auto;
 		margin-left: auto;
 		margin-right: auto;
-		font-size: 10px;
+		font-size: 12px;
 	}
 
 	.title {
-		font-size: 14px;
+		font-size: 16px;
 	}
 
 	#header {
@@ -71,7 +71,7 @@ body {
 
 	#def {
 		padding-top: 15px;
-		font-size: 12px;
+		font-size: 14px;
 	}
 
 	#def > div {
@@ -101,7 +101,7 @@ body {
 	}
 
 	.row {
-		font-size: 10px;
+		font-size: 12px;
 	}
 
 	#clear {
