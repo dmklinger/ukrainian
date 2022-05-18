@@ -256,7 +256,7 @@ class Usage:
 						self.add_info(word_info)
 						self.add_forms(forms, form_type)
 						self.delete_me = False
-		if force and self.pos not in ('noun', 'verb', 'adjective'):
+		if force or self.pos not in ('noun', 'verb', 'adjective'):
 			self.delete_me = False
 		if not added_flag and len(self.forms) > 0:
 			self.delete_me = False
