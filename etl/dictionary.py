@@ -82,6 +82,8 @@ class Usage:
 
 	def __init__(self, word, pos):
 		self.word = word
+		if not pos:
+			pos = 'particle'
 		self.pos = pos
 		self.definitions = {}
 		self.alerted_definitions = {}
@@ -256,7 +258,7 @@ class Usage:
 						self.add_info(word_info)
 						self.add_forms(forms, form_type)
 						self.delete_me = False
-		if force or self.pos not in ('noun', 'verb', 'adjective'):
+		if self.pos not in ('noun', 'verb', 'adjective'):
 			self.delete_me = False
 		if not added_flag and len(self.forms) > 0:
 			self.delete_me = False
@@ -366,12 +368,16 @@ class Word:
 		}
 		if pos in replace:
 			return replace[pos]
+		if not pos:
+			pos = 'particle'
 		return pos
 
 	def get_word_no_accent(self):
 		return self.word.replace("́", "")
 
 	def add_definition(self, pos, definition):
+		if pos is None:
+			pos = 'particle'
 		if pos == 'verb' and len(definition.split()) == 1:
 			definition = f"to {definition}"
 		if '[1]' in definition:
@@ -459,10 +465,14 @@ class Word:
 				usage.add_frequency(None)
 
 	def add_info(self, pos, word_info):
+		if not pos:
+			pos = 'particle'
 		if pos in self.usages:
 			self.usages[pos].add_info(word_info)
 		
 	def add_forms(self, pos, forms, form_type):
+		if not pos:
+			pos = 'particle'
 		self.usages[pos].add_forms(forms, form_type)
 
 	def add_inflections(self, results):
