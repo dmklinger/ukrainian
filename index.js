@@ -398,79 +398,84 @@ document.addEventListener('copy', (event) => {
 	}
 })
 
-fetch('index.json')
-	.then(res => res.json() )
-	.then(out => { 
-		console.log('starting index.json')
-		for (const o of Object.keys(out)) index[o] = {'word': out[o][0], 'indexes': new Set(out[o][1])};
-		console.log('done with index.json') 
-	})
-	.catch(err => {throw err; });
+Promise.all([
 
-fetch('word_dict.json')
-	.then(res => res.json() )
-	.then(out => { 
-		console.log('starting word_dict.json')
-		for (const o of Object.keys(out)) wordDict[o] = new Set(out[o]); 
-		console.log('done with word_dict.json')
-	})
-	.catch(err => {throw err; });
+	fetch('index.json')
+		.then(res => res.json() )
+		.then(out => { 
+			console.log('starting index.json')
+			for (const o of Object.keys(out)) index[o] = {'word': out[o][0], 'indexes': new Set(out[o][1])};
+			console.log('done with index.json') 
+		})
+		.catch(err => {throw err; }),
 
-fetch('words.json')
-	.then(res => res.json())
-	.then(out => {
-		data = out;
-		freq_data = data;
-		main(data.slice(0, numDisplayed))
-		alpha_data = d3.sort(
-			[...data], 
-			x => x.word.toLowerCase()
-				.replaceAll('\u0301', '')
-				.split('')
-				.map((y) => {
-					const letters = Object({
-						'а': '0',
-						'б': '1',
-						'в': '2',
-						'г': '3',
-						'ґ': '4',
-						'д': '5',
-						'е': '6',
-						'є': '7',
-						'ж': '8',
-						'з': '9',
-						'и': ':',
-						'і': ';',
-						'ї': '<',
-						'й': '?',
-						'к': '@',
-						'л': 'A',
-						'м': 'B',
-						'н': 'C',
-						'о': 'D',
-						'п': 'E',
-						'р': 'F',
-						'с': 'G',
-						'т': 'H',
-						'у': 'I',
-						'ф': 'K',
-						'х': 'L',
-						'ц': 'M',
-						'ч': 'N',
-						'ш': 'O',
-						'щ': 'P',
-						'ь': 'Q',
-						'ю': 'R',
-						'я': 'S',
-						"'": 'T'
+	fetch('word_dict.json')
+		.then(res => res.json() )
+		.then(out => { 
+			console.log('starting word_dict.json')
+			for (const o of Object.keys(out)) wordDict[o] = new Set(out[o]); 
+			console.log('done with word_dict.json')
+		})
+		.catch(err => {throw err; }),
+
+	fetch('words.json')
+		.then(res => res.json())
+		.then(out => {
+			data = out;
+			freq_data = data;
+			main(data.slice(0, numDisplayed))
+			alpha_data = d3.sort(
+				[...data], 
+				x => x.word.toLowerCase()
+					.replaceAll('\u0301', '')
+					.split('')
+					.map((y) => {
+						const letters = Object({
+							'а': '0',
+							'б': '1',
+							'в': '2',
+							'г': '3',
+							'ґ': '4',
+							'д': '5',
+							'е': '6',
+							'є': '7',
+							'ж': '8',
+							'з': '9',
+							'и': ':',
+							'і': ';',
+							'ї': '<',
+							'й': '?',
+							'к': '@',
+							'л': 'A',
+							'м': 'B',
+							'н': 'C',
+							'о': 'D',
+							'п': 'E',
+							'р': 'F',
+							'с': 'G',
+							'т': 'H',
+							'у': 'I',
+							'ф': 'K',
+							'х': 'L',
+							'ц': 'M',
+							'ч': 'N',
+							'ш': 'O',
+							'щ': 'P',
+							'ь': 'Q',
+							'ю': 'R',
+							'я': 'S',
+							"'": 'T'
+						})
+						if (y in letters) return letters[y]
+						return ''
 					})
-					if (y in letters) return letters[y]
-					return ''
-				})
-				.join()
-		)
-	})
-	.catch(err => {throw err});
+					.join()
+			)
+		})
+		.catch(err => {throw err}),
+]).then( () => { 
+	readURL();
+}).catch(err => {throw err})
 
 window.onscroll = (_) => {
 	if (window.innerHeight + window.scrollY + 1000 >= document.body.offsetHeight) {
@@ -649,6 +654,7 @@ function filter() {
 }
 
 function search() {
+	setURL()
 	const letters = "abcdefghijklmnopqrstuvwxyzабвгдежзийклмнопрстуфхцчшщъыьэюяєіїґ '\""
 	const oldSearch = searchTerm;
 	searchTerm = document.querySelector('input#search').value.toLowerCase();
@@ -662,6 +668,49 @@ function search() {
 	}
 	searchHelper();
 	main(data.slice(0, numDisplayed))
+}
+
+function setURL() {
+	let urlSearchTerm = document.querySelector('input#search').value;
+	let urlFilterTerm = document.querySelector('select#filter').value;
+	let urlSortTerm = document.querySelector('select#sort').value;
+	let url = window.location.href;
+	url = url.split(/[#\?\&]/).reverse();
+	let base = url.pop();
+	let addedParam = false
+	if (urlSearchTerm) {
+		base += '#' + urlSearchTerm;
+	}
+	if (urlFilterTerm) {
+		base += '?f=' + urlFilterTerm;
+		addedParam = true
+	}
+	if (urlSortTerm) {
+		const startChar = addedParam ? '&' : '?';
+		base += startChar + 's=' + urlSortTerm;
+	}
+	window.history.replaceState("", "", base)
+}
+
+function readURL() {
+	let urlRaw = window.location.href;
+	let url = urlRaw.split(/[#\?\&]/).reverse();
+	const base = url.pop();  // unused
+	let urlSearchTerm = null;
+	if (urlRaw.indexOf('#') !== -1) {
+		urlSearchTerm = decodeURI(url.pop());
+	}
+	let params = [];
+	while (url.length > 0) {
+		params.push(url.pop().split(/=/));
+	}
+	if (urlSearchTerm) document.querySelector('input#search').value = urlSearchTerm;
+	for (const [var_, val_] of params) {
+		if (var_ === 's') document.querySelector('select#sort').value = val_;
+		if (var_ === 'f') document.querySelector('select#filter').value = val_;
+	}
+	select();
+	filter();
 }
 
 function clear() {
