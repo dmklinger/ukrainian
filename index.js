@@ -706,7 +706,7 @@ function readURL() {
 	for (const [var_, val_] of params) {
 		if (var_ === 's') document.querySelector('select#sort').value = val_;
 		if (var_ === 'f') document.querySelector('select#filter').value = val_;
-		if (var_ === 'q') document.querySelector('input#search').value = val_;
+		if (var_ === 'q') document.querySelector('input#search').value = decodeURI(val_);
 	}
 	select();
 	filter();
