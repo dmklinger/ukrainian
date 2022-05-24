@@ -678,6 +678,7 @@ function setURL() {
 	url = url.split(/[#\?\&]/).reverse();
 	let base = url.pop();
 	let addedParam = false
+	base += '#search'
 	if (urlSearchTerm) {
 		base += '?q=' + urlSearchTerm;
 	}
@@ -695,8 +696,9 @@ function setURL() {
 
 function readURL() {
 	let urlRaw = window.location.href;
-	let url = urlRaw.split(/[\?\&]/).reverse();
+	let url = urlRaw.split(/[#\?\&]/).reverse();
 	const base = url.pop();  // unused
+	const search = url.pop(); // unused
 	let params = [];
 	while (url.length > 0) {
 		params.push(url.pop().split(/=/));
