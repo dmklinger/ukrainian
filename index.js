@@ -679,10 +679,11 @@ function setURL() {
 	let base = url.pop();
 	let addedParam = false
 	if (urlSearchTerm) {
-		base += '#' + urlSearchTerm;
+		base += '?q=' + urlSearchTerm;
 	}
 	if (urlFilterTerm) {
-		base += '?f=' + urlFilterTerm;
+		const startChar = addedParam ? '&' : '?';
+		base += startChar + 'f=' + urlFilterTerm;
 		addedParam = true
 	}
 	if (urlSortTerm) {
@@ -694,20 +695,16 @@ function setURL() {
 
 function readURL() {
 	let urlRaw = window.location.href;
-	let url = urlRaw.split(/[#\?\&]/).reverse();
+	let url = urlRaw.split(/[\?\&]/).reverse();
 	const base = url.pop();  // unused
-	let urlSearchTerm = null;
-	if (urlRaw.indexOf('#') !== -1) {
-		urlSearchTerm = decodeURI(url.pop());
-	}
 	let params = [];
 	while (url.length > 0) {
 		params.push(url.pop().split(/=/));
 	}
-	if (urlSearchTerm) document.querySelector('input#search').value = urlSearchTerm;
 	for (const [var_, val_] of params) {
 		if (var_ === 's') document.querySelector('select#sort').value = val_;
 		if (var_ === 'f') document.querySelector('select#filter').value = val_;
+		if (var_ === 'q') document.querySelector('input#search').value = val_;
 	}
 	select();
 	filter();
