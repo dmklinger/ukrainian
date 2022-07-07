@@ -661,6 +661,7 @@ function search(changeURL = true) {
 	const oldSearch = searchTerm;
 	searchTerm = document.querySelector('input#search').value.toLowerCase();
 	searchTerm = searchTerm.replace('“', '"').replace('”', '"').replace('«', '"').replace('»', '"')
+	searchTerm = searchTerm.replace('‘', "'").replace('’', "'").replace('‛', "'")
 	let newSearchTerm = ''
 	for (const s of searchTerm) { if (letters.includes(s)) newSearchTerm += s; }
 	searchTerm = newSearchTerm;
