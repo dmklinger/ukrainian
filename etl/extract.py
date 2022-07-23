@@ -47,7 +47,7 @@ def get_ontolex(use_cache=True):
 	with session.get('http://kaiko.getalp.org/static/ontolex/latest/en_dbnary_ontolex.ttl.bz2', stream=True) as f:
 		data = bz2.BZ2File(f.raw).read()
 	print('decompressing')
-	with open('data/raw_dbnary_dump.ttl', 'wb+', encoding='utf-8') as f:
+	with open('data/raw_dbnary_dump.ttl', 'wb+') as f:
 		f.write(data)
 	print('decompressing finished')
 
