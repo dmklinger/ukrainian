@@ -86,14 +86,14 @@ class Ontolex:
 			if i % divisor == 0:
 				print(f"{i // divisor} of {n // divisor}")
 			if 'eng:__en_gloss' in line or 'eng/__en_gloss' in line:
-				gloss = line.split(';')[0].split('>')[0].split('/')[-1].split('.')[0].split(':')[-1].strip()
+				gloss = line.split(';')[0].split('>')[0].split('/')[-1].split(':')[-1].strip()
 				vals = [x.replace('_', ' ').strip() for x in '_'.join(gloss.split('_')[5:]).split('__')]
 				word = vals[0]
 				new_word = word
 				part_of_speech = vals[1] if len(vals) > 1 else None
 				self.get_word(word).add_gloss(gloss, part_of_speech)
 			if 'dbnary:isTranslationOf' in line:
-				translation = line.split(';')[0].split('>')[0].split('/')[-1].split('.')[0].split(':')[-1].strip().replace('__en_gloss', '')
+				translation = line.split(';')[0].split('>')[0].split('/')[-1].split(':')[-1].strip().replace('__en_gloss', '')
 				vals = [x.replace('_', ' ').strip() for x in translation.split('__')]
 				new_word = vals[0]
 				if new_word == word:

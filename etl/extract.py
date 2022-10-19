@@ -65,7 +65,7 @@ def get_lemmas():
 	add_words(words, results)
 
 	while 'continue' in results:
-		cmcontinue = results['continue']
+		cmcontinue = results['continue']['cmcontinue']
 		results = session.get(f'https://en.wiktionary.org/w/api.php?action=query&list=categorymembers&cmtitle=Category:Ukrainian_lemmas&format=json&cmlimit=max&cmcontinue={cmcontinue}').json()
 		add_words(words, results)
 	
