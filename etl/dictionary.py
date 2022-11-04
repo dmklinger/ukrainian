@@ -648,10 +648,10 @@ class Dictionary:
 			def_words = usage.get_definition_words()
 			form_words = usage.get_form_words() + re.sub(r"[^\w']+", ' ', word.get_word_no_accent()).strip().split()
 			for d in def_words:
-				d = d.lower()
+				d = d.lower().replace('ї', 'і').replace('ґ', 'г')
 				word_index[d].add(i)
 			for f in form_words:
-				f = f.lower()
+				f = f.lower().replace('ї', 'і').replace('ґ', 'г')
 				word_index[f].add(i)
 
 		word_index_list = {}
