@@ -563,8 +563,9 @@ class Dictionary:
 				if i % 100 == 0:
 					print(f"{i} of {n}")
 				result = extract.get_wiktionary_word(w)
-				for r in result:
-					self.add_to_dictionary(r)
+				if result:
+					for r in result:
+						self.add_to_dictionary(r)
 		except Exception as e:
 			raise e
 		finally:

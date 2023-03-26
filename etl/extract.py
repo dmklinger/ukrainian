@@ -113,6 +113,8 @@ def get_wiktionary_word(word, use_cache=True):
 		pos_pointer = word_pointer.find_previous(['h3', 'h4'])
 		pos = pos_pointer.span.text.lower()
 		def_pointer = word_pointer.find_next('ol')
+		if not def_pointer:
+			return
 		ds = def_pointer.find_all('li')
 		bad_stuff = def_pointer.find_all('span', class_='HQToggle') \
 			+ def_pointer.find_all('abbr') \
