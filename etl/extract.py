@@ -490,7 +490,7 @@ def scrape_inflection(word):
 				data=data
 			)
 			result = BeautifulSoup(result.text, features='lxml')
-			inflections = result.find('td', id='ctl00_ContentPlaceHolder1_article')
+			inflections = result.find('td', id='ContentPlaceHolder1_article')
 			if inflections:
 				found_word = None
 				word_info = None
