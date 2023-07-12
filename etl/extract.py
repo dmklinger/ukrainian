@@ -462,7 +462,7 @@ def scrape_inflection(word):
 		data=data
 	)
 	result = BeautifulSoup(result.text, features='lxml')
-	index = result.find('table', id='ctl00_ContentPlaceHolder1_dgv')
+	index = result.find('table', id='DictMainTab')
 	other_words = index.find_all('a') if index else []
 
 	# subsequent searches
