@@ -4,7 +4,10 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "beautifulsoup4[lxml]>=4.14.3",
+    "requests>=2.34.2",
+]
 
 [dependency-groups]
 dev = [
